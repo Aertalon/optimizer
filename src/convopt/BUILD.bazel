@@ -1,0 +1,14 @@
+cc_library(
+    name = "convopt",
+    srcs = [
+        "convopt.cpp"
+    ],
+    hdrs = [
+        "convopt.h"
+    ],
+    deps = [
+        "//src/dualnumbers:dualnumbers",
+        "//src/spaces:spaces",
+    ],
+    visibility = ["//visibility:public"],
+)

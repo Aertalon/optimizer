@@ -1,0 +1,10 @@
+load("@rules_cc//cc:defs.bzl", "cc_test")
+
+cc_test(
+  name = "spaces_test",
+  size = "small",
+  srcs = ["spaces_test.cc"],
+  deps = [
+    "//src/spaces",
+    "@com_google_googletest//:gtest_main"],
+)
