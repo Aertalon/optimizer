@@ -16,11 +16,12 @@ class CostMultipleVariables {
 
 int main()
 {
-    constexpr CostMultipleVariables c{};
-    auto result{convopt::optimize(std::array<float, 2>{10.0F, 20.0F}, c)};
-    auto minval{c(result)};
+    // FIXME
+    // constexpr CostMultipleVariables c{};
+    // auto result{convopt::optimize(std::array<float, 2>{10.0F, 20.0F}, c)};
+    // auto minval{c(result)};
 
-    std::cout << "Optimization result: " << result[0] << ", " << result[1]
-              << "; minimum value: " << minval << std::endl;
+    // std::cout << "Optimization result: " << result[0] << ", " << result[1]
+    //           << "; minimum value: " << minval << std::endl;
     return 0;
 }
