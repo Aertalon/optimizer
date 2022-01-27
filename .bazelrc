@@ -1,16 +1,56 @@
-# Use our custom-configured c++ toolchain.
+build --cxxopt='-std=c++20'
+build --verbose_failures
+build --show_result='100'
 
-build:clang_config --crosstool_top=//toolchain:clang_suite
+# Required for bazel_clang_tidy to operate as expected
+build:clang-tidy --aspects @bazel_clang_tidy//clang_tidy:clang_tidy.bzl%clang_tidy_aspect
+build:clang-tidy --output_groups=report
 
-# Use --cpu as a differentiator.
+build:clang-tidy --repo_env='BAZEL_CXXOPTS=-stdlib=libc++'
+build:clang-tidy --repo_env='BAZEL_LINKLIBS=-lc++:-lm'
 
-build:clang_config --cpu=k8
+# Sanitizers don't work too well on Apple-Clang, use GCC instead
 
-# Use the default Bazel C++ toolchain to build the tools used during the
-# build.
+# Address sanitizer
+# To use it: bazel build --config=asan
+build:asan --strip=never
+build:asan --copt -fsanitize=address
+build:asan --copt -DADDRESS_SANITIZER
+build:asan --copt -O1
+build:asan --copt -g
+build:asan --copt -fno-omit-frame-pointer
+build:asan --linkopt -fsanitize=address
+build:asan --repo_env='ASAN_OPTIONS=detect_leaks=1:color=always'
 
-build:clang_config --host_crosstool_top=@bazel_tools//tools/cpp:toolchain
+# Thread sanitizer
+# bazel build --config=tsan
+build:tsan --strip=never
+build:tsan --copt -g
+build:tsan --copt -fsanitize=thread
+build:tsan --copt -DTHREAD_SANITIZER
+build:tsan --copt -DDYNAMIC_ANNOTATIONS_ENABLED=1
+build:tsan --copt -DDYNAMIC_ANNOTATIONS_EXTERNAL_IMPL=1
+build:tsan --copt -O1
+build:tsan --copt -fno-omit-frame-pointer
+build:tsan --linkopt -fsanitize=thread
 
-# Let's use something modern
-#build --cxxopt='-std=c++17' --nofetch --nokeep_state_after_build
-build --cxxopt='-std=c++17'
+# Undefined Behavior Sanitizer
+# bazel build --config=ubsan
+build:ubsan --strip=never
+build:ubsan --copt -fsanitize=undefined
+build:ubsan --copt -O1
+build:ubsan --copt -fno-omit-frame-pointer
+build:ubsan --linkopt -fsanitize=undefined
+build:ubsan --linkopt -lubsan
+
+test --keep_going
+test --build_tests_only
+test --test_output=errors
+test --test_summary=detailed
+
+test --test_timeout=15,-1,-1,-1
+
+# https://github.com/bazelbuild/bazel/issues/7091
+build --build_python_zip
+
+try-import %workspace%/.bazelrc.user
