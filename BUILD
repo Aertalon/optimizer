@@ -1,6 +1,6 @@
-exports_files(
-    [".clang-tidy"],
-    visibility = ["//:__subpackages__"],
+load(
+    "@local_config//:defs.bzl",
+    "PROJECT_DEFAULT_COPTS",
 )
 
 # FIXME

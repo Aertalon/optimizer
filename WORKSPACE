@@ -5,6 +5,16 @@ load(
     "new_git_repository",
 )
 
+load(
+    ":configure.bzl",
+    "configure_local_variables",
+)
+
+configure_local_variables(
+    name = "local_config",
+    defs_template = "//:defs.bzl.tpl",
+)
+
 gtest_version = "release-1.11.0"
 
 # Fetch gtest
