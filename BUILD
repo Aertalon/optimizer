@@ -7,7 +7,7 @@ cc_binary(
     name = "optimizer",
     srcs = ["src/main.cpp"],
     deps = [
-        "//src/convopt:convopt",
-        "//src/dualnumbers:dualnumbers",
-    ]
+        "//src/convopt",
+        "//src/dualnumbers",
+    ],
 )

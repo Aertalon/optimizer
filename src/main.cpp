@@ -1,5 +1,5 @@
-#include "src/convopt/convopt.h"
-#include "src/dualnumbers/dualnumbers.h"
+#include "src/convopt/convopt.hpp"
+#include "src/dualnumbers/dualnumbers.hpp"
 
 #include <iostream>
 
