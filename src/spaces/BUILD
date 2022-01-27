@@ -1,12 +1,12 @@
 cc_library(
     name = "spaces",
     srcs = [
-        "spaces.cpp"
+        "spaces.cpp",
     ],
     hdrs = [
-        "spaces.h"
-    ],
-    deps = [
+        "spaces.hpp",
     ],
     visibility = ["//visibility:public"],
+    deps = [
+    ],
 )

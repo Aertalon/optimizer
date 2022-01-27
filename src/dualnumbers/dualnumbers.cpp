@@ -1,5 +1,3 @@
-#include "dualnumbers.h"
+#include "dualnumbers.hpp"
 
-namespace dualnumbers
-{
-}  // namespace dualnumbers
+namespace dualnumbers {}  // namespace dualnumbers

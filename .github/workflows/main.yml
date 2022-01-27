@@ -1,0 +1,227 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+env:
+  BAZEL_VERSION: "5.0.0-pre.20210929.1"
+  GCC_VERSION: 11
+  LLVM_VERSION: 14
+  DOXYGEN_VERSION: "1.9.2"
+
+jobs:
+  test:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest]
+        config: [gcc, clang, asan, tsan, ubsan]
+
+    runs-on: ${{ matrix.os }}
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Install compiler
+      run: |
+        if [[ "${{ matrix.config }}" == "clang"  ]]; then
+          sudo .github/workflows/llvm.sh ${LLVM_VERSION}
+
+          sudo apt-get install -y \
+            clang-${LLVM_VERSION} lld-${LLVM_VERSION} \
+            libc++1-${LLVM_VERSION} libc++abi1-${LLVM_VERSION} \
+            libc++-${LLVM_VERSION}-dev libc++abi-${LLVM_VERSION}-dev
+
+          echo "build --linkopt=-L/usr/lib/llvm-${LLVM_VERSION}/lib" >> .bazelrc.ci
+          echo "build --linkopt=-Wl,-rpath,/usr/lib/llvm-${LLVM_VERSION}/lib" >> .bazelrc.ci
+
+          echo "compiler=$(which clang-${LLVM_VERSION})" >> $GITHUB_ENV
+        else
+          sudo apt-get update
+          sudo apt-get install -y g++-${GCC_VERSION}
+          echo "compiler=g++-${GCC_VERSION}" >> $GITHUB_ENV
+        fi
+
+    - name: Print compiler info
+      run: |
+        ${{ env.compiler }} --version
+        echo "build --repo_env='CC=$(which ${{ env.compiler }})'" >> .bazelrc.ci
+        tail .bazelrc.ci
+
+    - name: Suppress GCC bug 'https://gcc.gnu.org/bugzilla//show_bug.cgi?id=100878'
+      if: matrix.config != 'clang' && matrix.config != 'gcc'
+      run: |
+        printf '%s\n%s\n'  $(${{ env.compiler }} -dumpfullversion -dumpversion) 11.1.0 \
+          | sort --check --version-sort
+        echo "build --copt -Wno-nonnull" >> .bazelrc.ci
+
+    - id: cache-bazel-install
+      uses: actions/cache@v2
+      with:
+        path: |
+          ~/bin/bazel*
+          ~/.bazel
+        key: ${{ matrix.os }}-bazel-${{ env.BAZEL_VERSION }}
+
+    - id: cache-bazel-out
+      uses: actions/cache@v2
+      with:
+        path: |
+          ~/.cache/bazel
+        key: ${{ matrix.os }}-bazel-${{ env.BAZEL_VERSION }}-${{ matrix.config }}-${{ github.sha }}
+        restore-keys: |
+          ${{ matrix.os }}-bazel-${{ env.BAZEL_VERSION }}-${{ matrix.config }}-
+
+    - name: Setup Bazel ${{ env.BAZEL_VERSION }}
+      run: |
+        .github/workflows/bazel.sh \
+          "${{ steps.cache-bazel-install.outputs.cache-hit }}" linux ${BAZEL_VERSION}
+
+        cat .bazelrc.ci >> .bazelrc
+        bazel --version
+
+    - name: Build and Test
+      run: |
+        bazel build --config=${{ matrix.config }} //...
+        bazel test --config=${{ matrix.config }} //...
+
+  format:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Install clang-format ${{ env.LLVM_VERSION }}
+      run: |
+        sudo .github/workflows/llvm.sh ${LLVM_VERSION}
+        sudo apt-get install -y clang-format-${LLVM_VERSION}
+        clang-format-${LLVM_VERSION} --version
+
+    - name: Install buildifier
+      run: |
+        go get -u github.com/bazelbuild/buildtools/buildifier
+        export PATH=$PATH:$(go env GOPATH)/bin
+        buildifier --version
+
+    - name: Run clang-format and buildifier
+      run: |
+        export PATH=$PATH:$(go env GOPATH)/bin
+        ./run_format.sh clang-format-${LLVM_VERSION} buildifier
+        git --no-pager diff
+        git update-index --really-refresh
+        git --no-pager diff
+
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Install clang-tidy ${{ env.LLVM_VERSION }}
+        run: |
+          sudo .github/workflows/llvm.sh ${LLVM_VERSION}
+
+          sudo apt-get install -y \
+            clang-${LLVM_VERSION} \
+            libc++1-${LLVM_VERSION} libc++abi1-${LLVM_VERSION} \
+            libc++-${LLVM_VERSION}-dev libc++abi-${LLVM_VERSION}-dev
+
+          sudo apt-get install -y clang-tidy-${LLVM_VERSION}
+
+      - name: Link clang-tidy to clang-tidy-${{ env.LLVM_VERSION }}
+        run: |
+          sudo ln -s $(which clang-tidy-${LLVM_VERSION}) /usr/bin/clang-tidy
+          clang-tidy --version
+
+      - name: Set CC in bazelrc.ci
+        run: |
+          echo "build --repo_env='CC=$(which clang-${{ env.LLVM_VERSION }})'" >> .bazelrc.ci
+          tail .bazelrc.ci
+
+      - id: cache-bazel-install
+        uses: actions/cache@v2
+        with:
+          path: |
+            ~/bin/bazel*
+            ~/.bazel
+          key: ${{ matrix.os }}-bazel-${{ env.BAZEL_VERSION }}
+
+      - id: cache-bazel-out
+        uses: actions/cache@v2
+        with:
+          path: |
+            ~/.cache/bazel
+          key: ${{ matrix.os }}-bazel-${{ env.BAZEL_VERSION }}-clang-tidy-${{ github.sha }}
+          restore-keys: |
+            ${{ matrix.os }}-bazel-${{ env.BAZEL_VERSION }}-clang-tidy-
+
+      - name: Setup Bazel ${{ env.BAZEL_VERSION }}
+        run: |
+          .github/workflows/bazel.sh \
+            "${{ steps.cache-bazel-install.outputs.cache-hit }}" linux ${BAZEL_VERSION}
+
+          cat .bazelrc.ci >> .bazelrc
+          bazel --version
+
+      - name: Lint
+        run: |
+          bazel build --config=clang-tidy //...
+  doc:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Install Clang 9
+        run: |
+          sudo apt-get install -y libclang1-9 libclang-cpp9
+
+      - id: cache-doxygen-install
+        uses: actions/cache@v2
+        with:
+          path: |
+            ~/doxygen-*
+          key: ${{ matrix.os }}-doxygen-${{ env.DOXYGEN_VERSION }}
+
+      - id: cache-bazel-install
+        uses: actions/cache@v2
+        with:
+          path: |
+            ~/bin/bazel*
+            ~/.bazel
+          key: ${{ matrix.os }}-bazel-${{ env.BAZEL_VERSION }}
+
+      - id: cache-bazel-out
+        uses: actions/cache@v2
+        with:
+          path: |
+            ~/.cache/bazel
+          key: ${{ matrix.os }}-bazel-${{ env.BAZEL_VERSION }}-doxygen-${{ github.sha }}
+          restore-keys: |
+            ${{ matrix.os }}-bazel-${{ env.BAZEL_VERSION }}-doxygen-
+
+      - name: Setup Doxygen ${{ env.DOXYGEN_VERSION }}
+        run: |
+          if [[ "${{ steps.cache-doxygen-install.outputs.cache-hit }}" != 'true' ]]; then
+            cd ${HOME}
+
+            TAR="doxygen-${DOXYGEN_VERSION}.linux.bin.tar.gz"
+            wget -O "${TAR}" "https://www.doxygen.nl/files/${TAR}"
+            tar -xf "${TAR}"
+
+            cd -
+          fi
+
+          sudo ln -s "${HOME}/doxygen-${DOXYGEN_VERSION}/bin/doxygen" /usr/local/bin/doxygen
+          doxygen --version
+
+      - name: Setup Bazel ${{ env.BAZEL_VERSION }}
+        run: |
+          .github/workflows/bazel.sh \
+            "${{ steps.cache-bazel-install.outputs.cache-hit }}" linux ${BAZEL_VERSION}
+
+          cat .bazelrc.ci >> .bazelrc
+          bazel --version
+
+      - name: Generate documentation
+        run: |
+          bazel run @mcss//:doxygen

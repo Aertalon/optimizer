@@ -1,0 +1,17 @@
+build --repo_env='BAZEL_USE_CPP_ONLY_TOOLCHAIN=1'
+build --show_timestamps
+
+# Use GCC by default
+build         --repo_env='CC=/usr/local/bin/g++-11'
+
+build:apple   --repo_env='CC=/usr/bin/gcc'
+build:gcc     --repo_env='CC=/usr/local/bin/g++-11'
+build:clang   --repo_env='CC=/usr/local/opt/llvm/bin/clang'
+build:clang-tidy  --repo_env='CC=/usr/local/opt/llvm/bin/clang'
+
+build:fatal   --copt -Wfatal-errors
+
+test:output   --test_output=all
+test:output   --test_output=streamed
+test:output   --cache_test_results=no
+

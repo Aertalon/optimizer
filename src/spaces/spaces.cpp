@@ -1,6 +1,3 @@
-#include "spaces.h"
+#include "spaces.hpp"
 
-namespace spaces
-{
-
-}  // namespace spaces
+namespace spaces {}  // namespace spaces
