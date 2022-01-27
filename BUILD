@@ -3,6 +3,13 @@ exports_files(
     visibility = ["//:__subpackages__"],
 )
 
+# FIXME
+filegroup(
+    name = "headers",
+    srcs = glob(["src/**/*.hpp"]),
+    visibility = ["@mcss//:__pkg__"],
+)
+
 cc_binary(
     name = "optimizer",
     srcs = ["src/main.cpp"],
