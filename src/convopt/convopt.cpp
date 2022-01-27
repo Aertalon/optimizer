@@ -1,5 +1,3 @@
 #include "convopt.h"
 
-namespace convopt
-{
-}  // namespace convopt
+namespace convopt {}  // namespace convopt

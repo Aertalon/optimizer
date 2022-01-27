@@ -9,7 +9,8 @@ load(
 )
 
 # Get std symbols
-all_link_actions = [ # NEW
+all_link_actions = [
+    # NEW
     ACTION_NAMES.cpp_link_executable,
     ACTION_NAMES.cpp_link_dynamic_library,
     ACTION_NAMES.cpp_link_nodeps_dynamic_library,
@@ -73,7 +74,6 @@ def _impl(ctx):
             ],
         ),
     ]
-
 
     return cc_common.create_cc_toolchain_config_info(
         ctx = ctx,
