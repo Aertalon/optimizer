@@ -9,72 +9,74 @@ class DualNumber {
     float r_{};
     float e_{};
 
-    friend constexpr DualNumber
-    operator+(DualNumber const& x, DualNumber const& y)
+    friend constexpr auto operator+(DualNumber const& x, DualNumber const& y)
+        -> DualNumber
     {
-        return DualNumber{x.real() + y.real(), x.imag() + y.imag()};
+        return {x.real() + y.real(), x.imag() + y.imag()};
     }
 
-    friend constexpr DualNumber
-    operator-(DualNumber const& x, DualNumber const& y)
+    friend constexpr auto operator-(DualNumber const& x, DualNumber const& y)
+        -> DualNumber
     {
-        return DualNumber{x.real() - y.real(), x.imag() - y.imag()};
+        return {x.real() - y.real(), x.imag() - y.imag()};
     }
 
-    friend constexpr DualNumber
-    operator*(DualNumber const& x, DualNumber const& y)
+    friend constexpr auto operator*(DualNumber const& x, DualNumber const& y)
+        -> DualNumber
     {
-        return DualNumber{
-            x.real() * y.real(), x.real() * y.imag() + x.imag() * y.real()};
+        return {x.real() * y.real(), x.real() * y.imag() + x.imag() * y.real()};
     }
 
-    friend constexpr DualNumber
-    operator/(DualNumber const& x, DualNumber const& y)
+    friend constexpr auto operator/(DualNumber const& x, DualNumber const& y)
+        -> DualNumber
     {
-        return DualNumber{x.real() / y.real(),
-                          (x.imag() * y.real() - x.real() * y.imag()) /
-                              (y.real() * y.real())};
+        return {x.real() / y.real(),
+                (x.imag() * y.real() - x.real() * y.imag()) /
+                    (y.real() * y.real())};
     }
 
-    friend std::ostream& operator<<(std::ostream& os, DualNumber const& x)
+    friend auto operator<<(std::ostream& os, DualNumber const& x)
+        -> std::ostream&
     {
         os << "(" << x.real() << ", " << x.imag() << ")";
         return os;
     }
 
     // TODO: this is probably wrong, fix this
-    friend constexpr bool operator<(DualNumber const& x, DualNumber const& y)
+    friend constexpr auto operator<(DualNumber const& x, DualNumber const& y)
+        -> bool
     {
         return x.real() < y.real();
     }
 
-    friend constexpr bool operator==(DualNumber const& x, DualNumber const& y)
+    friend constexpr auto operator==(DualNumber const& x, DualNumber const& y)
+        -> bool
     {
         return (x.real() == y.real()) && (x.imag() == y.imag());
     }
 
-    friend constexpr bool operator!=(DualNumber const& x, DualNumber const& y)
+    friend constexpr auto operator!=(DualNumber const& x, DualNumber const& y)
+        -> bool
     {
         return !(x == y);
     }
 
-    friend constexpr DualNumber operator-(DualNumber const& x)
+    friend constexpr auto operator-(DualNumber const& x) -> DualNumber
     {
-        return DualNumber{-x.real(), -x.real()};
+        // TODO(enrlov): is this right?
+        return {-x.real(), -x.real()};
     }
 
   public:
-    constexpr DualNumber() = default;
+    DualNumber() = default;
 
-    constexpr DualNumber(float r) : r_{r}, e_{} {}
+    explicit constexpr DualNumber(float r) : r_{r} {}
 
+    // NOLINTNEXTLINE(bugprone-easily-swappable-parameters)
     constexpr DualNumber(float r, float e) : r_{r}, e_{e} {}
 
-    constexpr float real() { return r_; }
-    constexpr float real() const { return r_; }
-
-    constexpr float imag() { return e_; }
-    constexpr float imag() const { return e_; }
+    [[nodiscard]] constexpr auto real() const -> float { return r_; }
+    [[nodiscard]] constexpr auto imag() const -> float { return e_; }
 };
 
 }  // namespace dualnumbers

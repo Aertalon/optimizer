@@ -8,13 +8,15 @@ class CostMultipleVariables {
     template <class T>
     constexpr auto operator()(std::array<T, 2> x) const
     {
+        // NOLINTBEGIN(readability-magic-numbers)
         return 2.0F * std::get<0>(x) * std::get<0>(x) +
                std::get<0>(x) * (std::get<1>(x) + 7.0F) +
                std::get<1>(x) * std::get<1>(x);
+        // NOLINTEND(readability-magic-numbers)
     }
 };
 
-int main()
+auto main() -> int
 {
     // FIXME
     // constexpr CostMultipleVariables c{};

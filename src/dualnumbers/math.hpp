@@ -7,13 +7,13 @@
 namespace dualnumbers {
 
 template <std::size_t N>
-constexpr std::size_t factorial()
+constexpr auto factorial() -> std::size_t
 {
     return N * factorial<N - 1>();
 }
 
 template <>
-constexpr std::size_t factorial<0>()
+constexpr auto factorial<0>() -> std::size_t
 {
     return 1;
 }
@@ -21,7 +21,7 @@ constexpr std::size_t factorial<0>()
 template <std::size_t N>
 struct power {
     template <class T>
-    constexpr T operator()(T const& x)
+    [[nodiscard]] constexpr auto operator()(T const& x) const -> T
     {
         return x * power<N - 1>{}(x);
     }
@@ -30,7 +30,7 @@ struct power {
 template <>
 struct power<0> {
     template <class T>
-    constexpr T operator()(T const& x)
+    [[nodiscard]] constexpr auto operator()(T const&) const -> T
     {
         return T{1};
     }
@@ -38,7 +38,7 @@ struct power<0> {
 
 // Dumb exponential for exposition only
 template <std::size_t... Is>
-constexpr float exp_impl(float const& x, std::index_sequence<Is...>)
+constexpr auto exp_impl(float const& x, std::index_sequence<Is...>) -> float
 {
     using unused = int[];
     float ret{};
@@ -50,12 +50,13 @@ constexpr float exp_impl(float const& x, std::index_sequence<Is...>)
     return ret;
 }
 
-constexpr float exp(float const& x)
+constexpr auto exp(float const& x) -> float
 {
+    // NOLINTNEXTLINE(readability-magic-numbers)
     return exp_impl(x, std::make_index_sequence<10>{});
 }
 
-constexpr DualNumber exp(DualNumber const& x)
+constexpr auto exp(DualNumber const& x) -> DualNumber
 {
     return {exp(x.real()), x.imag() * exp(x.real())};
 }

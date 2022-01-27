@@ -4,6 +4,8 @@
 
 #include <gtest/gtest.h>
 
+// NOLINTBEGIN(readability-magic-numbers)
+
 namespace convopt {
 
 namespace test {}
@@ -11,7 +13,7 @@ namespace test {}
 class Cost {
   public:
     template <class T>
-    constexpr T operator()(Point<T, 2> const& x) const
+    constexpr auto operator()(Point<T, 2> const& x) const -> T
     {
         auto x_part{x.template get<0>() - T{3.0F}};
         auto y_part{x.template get<1>() - T{-1.0F}};
@@ -25,8 +27,7 @@ void convopt_gradient()
     constexpr Cost cost{};
     constexpr Point<float, 2> p{1.0F, 0.0F};
     static_assert(gradient(p, cost) ==
-                      Vector<float, 2>{-4.0F * dualnumbers::exp(4.0F), 2.0F},
-                  "");
+                  Vector<float, 2>{-4.0F * dualnumbers::exp(4.0F), 2.0F});
 }
 
 void convopt_optimize()
@@ -35,9 +36,11 @@ void convopt_optimize()
     constexpr Point<float, 2> p{1.0F, 0.0F};
 
     static_assert(
-        close_to(optimize(p, cost), Point<float, 2>{3.0F, -1.0F}, 1e-3F), "");
+        close_to(optimize(p, cost), Point<float, 2>{3.0F, -1.0F}, 1e-3F));
 }
 
 // Add tests
 
 }  // namespace convopt
+
+// NOLINTEND(readability-magic-numbers)

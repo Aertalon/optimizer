@@ -14,17 +14,18 @@ using spaces::Point;
 using spaces::Vector;
 
 template <std::size_t I, std::size_t N, class T, std::size_t... Is>
-constexpr Point<DualNumber, N>
+constexpr auto
 evaluated_point_at_index(Point<T, N> x, std::index_sequence<Is...>)
+    -> Point<DualNumber, N>
 {
-    Point<DualNumber, N> point{
+    Point<DualNumber, N> point = {
         DualNumber{x.template get<Is>(), Is == I ? 1.0F : 0.0F}...};
     return point;
 }
 
 template <std::size_t N, class T, class F, std::size_t... Is>
-constexpr Vector<T, N>
-gradient_impl(Point<T, N> x, F cost, std::index_sequence<Is...>)
+constexpr auto gradient_impl(Point<T, N> x, F cost, std::index_sequence<Is...>)
+    -> Vector<T, N>
 {
     return {
         (cost(evaluated_point_at_index<Is>(x, std::make_index_sequence<N>{}))
@@ -32,18 +33,19 @@ gradient_impl(Point<T, N> x, F cost, std::index_sequence<Is...>)
 }
 
 template <std::size_t N, class T, class F>
-constexpr Vector<T, N> gradient(Point<T, N> x, F cost)
+constexpr auto gradient(Point<T, N> x, F cost) -> Vector<T, N>
 {
     return gradient_impl(x, cost, std::make_index_sequence<N>{});
 }
 
 template <std::size_t N, class T, class F>
-constexpr Point<T, N>
-line_search(Point<T, N> orig, Vector<T, N> direction, F cost)
+constexpr auto line_search(Point<T, N> orig, Vector<T, N> direction, F cost)
+    -> Point<T, N>
 {
     // Implement actual linesearch
+    // NOLINTNEXTLINE(readability-magic-numbers)
     T lambda{0.001F};
-    Point<T, N> end{orig};
+    Point<T, N> end = {orig};
     while (cost(end + lambda * direction) < cost(end)) {
         end = end + lambda * direction;
     }
@@ -51,8 +53,9 @@ line_search(Point<T, N> orig, Vector<T, N> direction, F cost)
 }
 
 template <std::size_t N, class T>
-constexpr bool stopping_criterion(Vector<T, N> const& g)
+constexpr auto stopping_criterion(Vector<T, N> const& g) -> bool
 {
+    // NOLINTNEXTLINE(readability-magic-numbers)
     float tol{0.001F};
     return norm(g) < tol;
 }

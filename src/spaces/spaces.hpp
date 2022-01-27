@@ -16,21 +16,24 @@ class Entity<Derived<T, N>> {
     using coord_type = T;
     using coords_type = std::array<coord_type, size>;
 
-    constexpr coords_type get_coords() const { return coords_; }
+    [[nodiscard]] constexpr auto coords() const -> coords_type
+    {
+        return coords_;
+    }
 
     template <std::size_t I>
-    constexpr coord_type get() const
+    [[nodiscard]] constexpr auto get() const -> coord_type
     {
         return std::get<I>(coords_);
     }
 
   private:
     template <std::size_t... Is>
-    friend constexpr bool close_to_impl(
+    friend constexpr auto close_to_impl(
         Entity const& lhs,
         Entity const& rhs,
         coord_type tol,
-        std::index_sequence<Is...>)
+        std::index_sequence<Is...>) -> bool
     {
         using unused = int[];
         bool result{true};
@@ -47,15 +50,16 @@ class Entity<Derived<T, N>> {
         return result;
     }
 
-    friend constexpr bool
-    close_to(Entity const& lhs, Entity const& rhs, coord_type tol)
+    friend constexpr auto
+    close_to(Entity const& lhs, Entity const& rhs, coord_type tol) -> bool
     {
         return close_to_impl(lhs, rhs, tol, std::make_index_sequence<size>{});
     }
 
     template <std::size_t... Is>
-    friend std::ostream& operator_stream_impl(
+    friend auto operator_stream_impl(
         std::ostream& os, Entity const& p, std::index_sequence<Is...>)
+        -> std::ostream&
     {
         using unused = int[];
         os << "(";
@@ -67,14 +71,15 @@ class Entity<Derived<T, N>> {
         return os;
     }
 
-    friend std::ostream& operator<<(std::ostream& os, Entity const& p)
+    friend auto operator<<(std::ostream& os, Entity const& p) -> std::ostream&
     {
         return operator_stream_impl(os, p, std::make_index_sequence<size>{});
     }
 
     template <std::size_t... Is>
-    friend constexpr bool operator_equal_impl(
+    friend constexpr auto operator_equal_impl(
         Entity const& lhs, Entity const& rhs, std::index_sequence<Is...>)
+        -> bool
     {
         using unused = int[];
         bool result{true};
@@ -88,21 +93,21 @@ class Entity<Derived<T, N>> {
         return result;
     }
 
-    friend constexpr bool operator==(Entity const& lhs, Entity const& rhs)
+    friend constexpr auto operator==(Entity const& lhs, Entity const& rhs)
+        -> bool
     {
         return operator_equal_impl(lhs, rhs, std::make_index_sequence<size>{});
     }
 
-    friend constexpr bool operator!=(Entity const& lhs, Entity const& rhs)
+    friend constexpr auto operator!=(Entity const& lhs, Entity const& rhs)
+        -> bool
     {
         return !(lhs == rhs);
     }
 
     template <class... Args>
-    constexpr explicit Entity(coord_type x, Args&&... xs)
-    {
-        coords_ = {x, xs...};
-    }
+    constexpr explicit Entity(coord_type x, Args&&... xs) : coords_({x, xs...})
+    {}
 
     constexpr Entity() = default;
 
@@ -126,54 +131,57 @@ class Vector : public Entity<Vector<T, N>> {
 
   private:
     template <std::size_t... Is>
-    friend constexpr Vector
+    friend constexpr auto
     operator_unary_negate_impl(Vector const& v, std::index_sequence<Is...>)
+        -> Vector
     {
-        return {-std::get<Is>(v.get_coords())...};
+        return {-std::get<Is>(v.coords())...};
     }
 
-    friend constexpr Vector operator-(Vector const& v)
+    friend constexpr auto operator-(Vector const& v) -> Vector
     {
         return operator_unary_negate_impl(
             v, std::make_index_sequence<Vector::size>{});
     }
 
     template <std::size_t... Is>
-    friend constexpr Vector operator_binary_sum_impl(
+    friend constexpr auto operator_binary_sum_impl(
         Vector const& v1, Vector const& v2, std::index_sequence<Is...>)
+        -> Vector
     {
-        auto const coords_v1{v1.get_coords()};
-        auto const coords_v2{v2.get_coords()};
+        auto const coords_v1{v1.coords()};
+        auto const coords_v2{v2.coords()};
 
         return {(std::get<Is>(coords_v1) + std::get<Is>(coords_v2))...};
     }
 
-    friend constexpr Vector operator+(Vector const& v1, Vector const& v2)
+    friend constexpr auto operator+(Vector const& v1, Vector const& v2)
+        -> Vector
     {
         return operator_binary_sum_impl(
             v1, v2, std::make_index_sequence<Vector::size>{});
     }
 
     template <std::size_t... Is>
-    friend constexpr Vector operator_scalar_prod_impl(
+    friend constexpr auto operator_scalar_prod_impl(
         Vector const& v,
         Vector::coord_type const& s,
-        std::index_sequence<Is...>)
+        std::index_sequence<Is...>) -> Vector
     {
-        auto const coords_v{v.get_coords()};
+        auto const coords_v{v.coords()};
 
         return {(s * std::get<Is>(coords_v))...};
     }
 
-    friend constexpr Vector
-    operator*(Vector const& v, Vector::coord_type const& s)
+    friend constexpr auto
+    operator*(Vector const& v, Vector::coord_type const& s) -> Vector
     {
         return operator_scalar_prod_impl(
             v, s, std::make_index_sequence<Vector::size>{});
     }
 
-    friend constexpr Vector
-    operator*(Vector::coord_type const& s, Vector const& v)
+    friend constexpr auto
+    operator*(Vector::coord_type const& s, Vector const& v) -> Vector
     {
         return v * s;
     }
@@ -207,13 +215,13 @@ class Point : public Entity<Point<T, N>> {
 
   private:
     template <class VecType, std::size_t VecSize, std::size_t... Is>
-    friend constexpr Point operator_vector_point_sum_impl(
+    friend constexpr auto operator_vector_point_sum_impl(
         Point const& p,
         Vector<VecType, VecSize> const& v,
-        std::index_sequence<Is...>)
+        std::index_sequence<Is...>) -> Point
     {
-        auto const coords_p{p.get_coords()};
-        auto const coords_v{v.get_coords()};
+        auto const coords_p{p.coords()};
+        auto const coords_v{v.coords()};
 
         return {(std::get<Is>(coords_p) + std::get<Is>(coords_v))...};
     }
