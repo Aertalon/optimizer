@@ -1,7 +1,7 @@
 #include <gtest/gtest.h>
 #include "src/convopt/convopt.h"
 #include "src/spaces/spaces.h"
-
+#include "src/dualnumbers/math.h"
 
 namespace convopt
 {
@@ -20,16 +20,15 @@ class Cost
             auto x_part{x.template get<0>() - T{3.0F}};
             auto y_part{x.template get<1>() - T{-1.0F}};
 
-            return x_part * x_part + y_part * y_part;
+            return dualnumbers::exp(x_part * x_part) + y_part * y_part;
         }
 };
-
 
 void convopt_gradient()
 {
     constexpr Cost cost{};
     constexpr Point<float, 2> p{1.0F, 0.0F};
-    static_assert(gradient(p, cost) == Vector<float, 2>{-4.0F, 2.0F}, "");
+    static_assert(gradient(p, cost) == Vector<float, 2>{-4.0F*dualnumbers::exp(4.0F), 2.0F}, "");
 }
 
 void convopt_optimize()

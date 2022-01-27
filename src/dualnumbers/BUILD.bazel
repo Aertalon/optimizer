@@ -4,7 +4,8 @@ cc_library(
         "dualnumbers.cpp"
     ],
     hdrs = [
-        "dualnumbers.h"
+        "dualnumbers.h",
+        "math.h"
     ],
     deps = [
     ],
