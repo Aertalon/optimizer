@@ -75,8 +75,11 @@ class DualNumber {
     // NOLINTNEXTLINE(bugprone-easily-swappable-parameters)
     constexpr DualNumber(float r, float e) : r_{r}, e_{e} {}
 
-    [[nodiscard]] constexpr auto real() const -> float { return r_; }
-    [[nodiscard]] constexpr auto imag() const -> float { return e_; }
+    [[nodiscard]] constexpr auto real() & -> float& { return r_; }
+    [[nodiscard]] constexpr auto real() const& -> const float& { return r_; }
+
+    [[nodiscard]] constexpr auto imag() & -> float& { return e_; }
+    [[nodiscard]] constexpr auto imag() const& -> const float& { return e_; }
 };
 
 }  // namespace dualnumbers
