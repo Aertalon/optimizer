@@ -67,16 +67,7 @@ class Entity<Derived<T, N>> : std::array<T, N> {
     }
 
     [[nodiscard]] friend constexpr auto
-    operator==(Entity const& lhs, Entity const& rhs) -> bool
-    {
-        return std::transform_reduce(
-            lhs.cbegin(),
-            lhs.cend(),
-            rhs.cbegin(),
-            true,
-            std::logical_and{},
-            std::ranges::equal_to{});
-    }
+    operator==(Entity const& lhs, Entity const& rhs) -> bool = default;
 
     friend Derived<T, N>;
 

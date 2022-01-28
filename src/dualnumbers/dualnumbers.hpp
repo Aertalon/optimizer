@@ -50,16 +50,7 @@ class DualNumber {
     }
 
     friend constexpr auto operator==(DualNumber const& x, DualNumber const& y)
-        -> bool
-    {
-        return (x.real() == y.real()) && (x.imag() == y.imag());
-    }
-
-    friend constexpr auto operator!=(DualNumber const& x, DualNumber const& y)
-        -> bool
-    {
-        return !(x == y);
-    }
+        -> bool = default;
 
     friend constexpr auto operator-(DualNumber const& x) -> DualNumber
     {
