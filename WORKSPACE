@@ -6,7 +6,7 @@ load(
 )
 
 load(
-    ":configuration/configure.bzl",
+    "//configuration:configure.bzl",
     "configure_local_variables",
 )
 
