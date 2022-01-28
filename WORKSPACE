@@ -4,12 +4,10 @@ load(
     "git_repository",
     "new_git_repository",
 )
-
 load(
     "//configuration:configure.bzl",
     "configure_local_variables",
 )
-
 configure_local_variables(
     name = "local_config",
     defs_template = "//configuration:defs.bzl.tpl",
