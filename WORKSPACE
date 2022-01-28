@@ -6,13 +6,13 @@ load(
 )
 
 load(
-    ":configure.bzl",
+    ":configuration/configure.bzl",
     "configure_local_variables",
 )
 
 configure_local_variables(
     name = "local_config",
-    defs_template = "//:defs.bzl.tpl",
+    defs_template = "//configuration:defs.bzl.tpl",
 )
 
 gtest_version = "release-1.11.0"
