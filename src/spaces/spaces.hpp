@@ -87,11 +87,13 @@ class Entity<Derived<T, N>> : std::array<T, N> {
 
     constexpr Entity(coords_type coords) : coords_type{std::move(coords)} {}
 
+    // NOLINTBEGIN(modernize-use-equals-delete)
     template <class... Args>
     requires(std::same_as<coord_type, std::remove_cvref_t<Args>>&&...)  //
         explicit(sizeof...(Args) == 1) constexpr Entity(Args&&... xs)
         : coords_type({std::forward<Args>(xs)...})
     {}
+    // NOLINTEND(modernize-use-equals-delete)
 };
 
 /// A simple vector class
