@@ -46,13 +46,22 @@ class Entity<Derived<T, N>> : std::array<T, N> {
     [[nodiscard]] friend constexpr auto
     close_to(Entity const& lhs, Entity const& rhs, coord_type tol) -> bool
     {
+        // TODO move to common location or replace with constexpr math lib
+        constexpr auto abs = [](auto x) {
+            if (x < decltype(x){}) {
+                return -x;
+            }
+
+            return x;
+        };
+
         return std::transform_reduce(
             lhs.cbegin(),
             lhs.end(),
             rhs.cbegin(),
             true,
             std::logical_and{},
-            [tol](auto x, auto y) { return std::abs(x - y) < tol; });
+            [abs, tol](auto x, auto y) { return abs(x - y) < tol; });
     }
 
     friend auto operator<<(std::ostream& os, Entity const& p) -> std::ostream&
