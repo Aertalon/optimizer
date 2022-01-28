@@ -2,7 +2,7 @@
 
 #include <gtest/gtest.h>
 
-namespace dualnumbers {
+namespace opt {
 
 namespace test {}
 
@@ -26,4 +26,4 @@ void dualnumbers_product()
 
 // Add tests for / and affine and nonlinear functions
 
-}  // namespace dualnumbers
+}  // namespace opt

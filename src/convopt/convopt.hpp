@@ -7,11 +7,7 @@
 #include <array>
 #include <iostream>
 
-namespace convopt {
-
-using dualnumbers::DualNumber;
-using spaces::Point;
-using spaces::Vector;
+namespace opt {
 
 template <std::size_t N, class T, class F>
 constexpr auto gradient(Point<T, N> p, F cost) -> Vector<T, N>
@@ -76,4 +72,4 @@ constexpr auto optimize(Point<T, N> initial, F c)
     return x;
 }
 
-}  // namespace convopt
+}  // namespace opt

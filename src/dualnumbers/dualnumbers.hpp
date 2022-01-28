@@ -2,7 +2,7 @@
 
 #include <iostream>
 
-namespace dualnumbers {
+namespace opt {
 
 class DualNumber {
   private:
@@ -73,4 +73,4 @@ class DualNumber {
     [[nodiscard]] constexpr auto imag() const& -> const float& { return e_; }
 };
 
-}  // namespace dualnumbers
+}  // namespace opt

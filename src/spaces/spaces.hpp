@@ -9,7 +9,7 @@
 #include <ranges>
 #include <utility>
 
-namespace spaces {
+namespace opt {
 
 template <class T>
 class Entity {};
@@ -174,4 +174,4 @@ class Point : public Entity<Point<T, N>> {
     }
 };
 
-}  // namespace spaces
+}  // namespace opt
