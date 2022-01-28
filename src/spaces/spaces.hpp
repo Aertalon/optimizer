@@ -60,7 +60,10 @@ class Entity<Derived<T, N>> : std::array<T, N> {
         os << "(";
         os << p.coords()[0];
 
-        for (auto x : p | std::views::drop(1)) { os << ", " << x; }
+        // TODO use `std::views::drop` once clang implements it
+        for (auto x : std::ranges::drop_view{p, 1}) {
+            os << ", " << x;
+        }
 
         os << ")";
         return os;
@@ -101,7 +104,7 @@ class Vector : public Entity<Vector<T, N>> {
     [[nodiscard]] friend constexpr auto operator-(Vector const& v) -> Vector
     {
         auto r = Vector{};
-        std::ranges::transform(v, r.begin(), std::negate{});
+        std::transform(v.cbegin(), v.cend(), r.begin(), std::negate{});
         return r;
     }
 
@@ -109,7 +112,8 @@ class Vector : public Entity<Vector<T, N>> {
     operator+(Vector const& v1, Vector const& v2) -> Vector
     {
         auto r = Vector{};
-        std::ranges::transform(v1, v2, r.begin(), std::plus{});
+        std::transform(
+            v1.cbegin(), v1.cend(), v2.cbegin(), r.begin(), std::plus{});
         return r;
     }
 
@@ -117,7 +121,9 @@ class Vector : public Entity<Vector<T, N>> {
     operator*(Vector const& v, Vector::coord_type const& s) -> Vector
     {
         auto r = Vector{};
-        std::ranges::transform(v, r.begin(), [s](auto x) { return s * x; });
+        std::transform(v.cbegin(), v.cend(), r.begin(), [s](auto x) {
+            return s * x;
+        });
         return r;
     }
 
@@ -151,7 +157,8 @@ class Point : public Entity<Point<T, N>> {
     operator+(Point const& p, Vector<T, N> const& v) -> Point
     {
         auto r = Point{};
-        std::ranges::transform(p, v, r.begin(), std::plus{});
+        std::transform(
+            p.cbegin(), p.cend(), v.cbegin(), r.begin(), std::plus{});
         return r;
     }
 };

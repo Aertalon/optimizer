@@ -18,11 +18,9 @@ constexpr auto gradient(Point<T, N> p, F cost) -> Vector<T, N>
 {
     const auto d = [&p]() {
         auto d = Point<DualNumber, N>{};
-
-        std::ranges::transform(p.cbegin(), p.cend(), d.begin(), [](auto x) {
+        std::transform(p.cbegin(), p.cend(), d.begin(), [](auto x) {
             return DualNumber{x};
         });
-
         return d;
     }();
 
