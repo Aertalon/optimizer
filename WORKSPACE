@@ -11,7 +11,7 @@ load(
 
 configure_local_variables(
     name = "local_config",
-    defs_template = "//configuration:defs.bzl.tpl",
+    defs_template = "//configuration:defs.bzl.in",
 )
 
 gtest_version = "release-1.11.0"
