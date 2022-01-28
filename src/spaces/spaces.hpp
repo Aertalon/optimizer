@@ -1,7 +1,12 @@
 #pragma once
 
+#include <algorithm>
 #include <array>
+#include <concepts>
+#include <functional>
 #include <iostream>
+#include <numeric>
+#include <ranges>
 #include <utility>
 
 namespace spaces {
@@ -9,112 +14,86 @@ namespace spaces {
 template <class T>
 class Entity {};
 
-template <std::size_t N, class T, template <class, std::size_t> class Derived>
-class Entity<Derived<T, N>> {
+template <class T, std::size_t N, template <class, std::size_t> class Derived>
+class Entity<Derived<T, N>> : std::array<T, N> {
   public:
     static constexpr std::size_t size{N};
     using coord_type = T;
     using coords_type = std::array<coord_type, size>;
 
-    [[nodiscard]] constexpr auto coords() const -> coords_type
+    [[nodiscard]] constexpr auto coords() & -> coords_type&
     {
-        return coords_;
+        return static_cast<coords_type&>(*this);
+    }
+    [[nodiscard]] constexpr auto coords() const& -> const coords_type&
+    {
+        return static_cast<const coords_type&>(*this);
     }
 
     template <std::size_t I>
-    [[nodiscard]] constexpr auto get() const -> coord_type
+    [[nodiscard]] constexpr auto get() const& -> const coord_type&
     {
-        return std::get<I>(coords_);
+        return std::get<I>(coords());
     }
+
+    using coords_type::begin;
+    using coords_type::cbegin;
+    using coords_type::cend;
+    using coords_type::end;
+    using coords_type::operator[];
 
   private:
-    template <std::size_t... Is>
-    friend constexpr auto close_to_impl(
-        Entity const& lhs,
-        Entity const& rhs,
-        coord_type tol,
-        std::index_sequence<Is...>) -> bool
-    {
-        using unused = int[];
-        bool result{true};
-
-        static_cast<void>(unused{
-            0,
-            (result =
-                 result &&
-                 (std::get<Is>(lhs.coords_) - std::get<Is>(rhs.coords_) >
-                  -tol) &&
-                 (std::get<Is>(lhs.coords_) - std::get<Is>(rhs.coords_) < tol),
-             0)...});
-
-        return result;
-    }
-
-    friend constexpr auto
+    [[nodiscard]] friend constexpr auto
     close_to(Entity const& lhs, Entity const& rhs, coord_type tol) -> bool
     {
-        return close_to_impl(lhs, rhs, tol, std::make_index_sequence<size>{});
-    }
+        // TODO move to common location or replace with constexpr math lib
+        constexpr auto abs = [](auto x) {
+            if (x < decltype(x){}) {
+                return -x;
+            }
 
-    template <std::size_t... Is>
-    friend auto operator_stream_impl(
-        std::ostream& os, Entity const& p, std::index_sequence<Is...>)
-        -> std::ostream&
-    {
-        using unused = int[];
-        os << "(";
+            return x;
+        };
 
-        static_cast<void>(
-            unused{0, (os << std::get<Is>(p.coords_) << ",", 0)...});
-        os << ")";
-
-        return os;
+        return std::transform_reduce(
+            lhs.cbegin(),
+            lhs.end(),
+            rhs.cbegin(),
+            true,
+            std::logical_and{},
+            [abs, tol](auto x, auto y) { return abs(x - y) < tol; });
     }
 
     friend auto operator<<(std::ostream& os, Entity const& p) -> std::ostream&
     {
-        return operator_stream_impl(os, p, std::make_index_sequence<size>{});
+        os << "(";
+        os << p.coords()[0];
+
+        // TODO use `std::views::drop` once clang implements it
+        for (auto x : std::ranges::drop_view{p, 1}) {
+            os << ", " << x;
+        }
+
+        os << ")";
+        return os;
     }
 
-    template <std::size_t... Is>
-    friend constexpr auto operator_equal_impl(
-        Entity const& lhs, Entity const& rhs, std::index_sequence<Is...>)
-        -> bool
-    {
-        using unused = int[];
-        bool result{true};
+    [[nodiscard]] friend constexpr auto
+    operator==(Entity const& lhs, Entity const& rhs) -> bool = default;
 
-        static_cast<void>(unused{
-            0,
-            (result = result &&
-                      (std::get<Is>(lhs.coords_) == std::get<Is>(rhs.coords_)),
-             0)...});
-
-        return result;
-    }
-
-    friend constexpr auto operator==(Entity const& lhs, Entity const& rhs)
-        -> bool
-    {
-        return operator_equal_impl(lhs, rhs, std::make_index_sequence<size>{});
-    }
-
-    friend constexpr auto operator!=(Entity const& lhs, Entity const& rhs)
-        -> bool
-    {
-        return !(lhs == rhs);
-    }
-
-    template <class... Args>
-    constexpr explicit Entity(coord_type x, Args&&... xs) : coords_({x, xs...})
-    {}
+    friend Derived<T, N>;
 
     constexpr Entity() = default;
 
-    constexpr Entity(coords_type coords) : coords_{std::move(coords)} {}
+    constexpr Entity(coords_type coords) : coords_type{std::move(coords)} {}
 
-    friend Derived<T, N>;
-    coords_type coords_{};
+    // NOLINTBEGIN(modernize-use-equals-delete)
+    template <class... Args>
+    requires(std::same_as<coord_type, std::remove_cvref_t<Args>>&&...)  //
+        explicit(sizeof...(Args) == 1) constexpr Entity(Args&&... xs)
+        : coords_type({std::forward<Args>(xs)...})
+    {}
+    // NOLINTEND(modernize-use-equals-delete)
 };
 
 /// A simple vector class
@@ -124,118 +103,74 @@ class Vector : public Entity<Vector<T, N>> {
     static constexpr std::size_t size = N;
     using coord_type = typename Entity<Vector<T, N>>::coord_type;
 
+    Vector() = default;
+
     template <class... Args>
-    constexpr Vector(Args&&... args)
+    requires(std::same_as<coord_type, std::remove_cvref_t<Args>>&&...)  //
+        explicit(sizeof...(Args) == 1) constexpr Vector(Args&&... args)
         : Entity<Vector<T, N>>(std::forward<Args>(args)...)
     {}
 
   private:
-    template <std::size_t... Is>
-    friend constexpr auto
-    operator_unary_negate_impl(Vector const& v, std::index_sequence<Is...>)
-        -> Vector
+    [[nodiscard]] friend constexpr auto operator-(Vector const& v) -> Vector
     {
-        return {-std::get<Is>(v.coords())...};
+        auto r = Vector{};
+        std::transform(v.cbegin(), v.cend(), r.begin(), std::negate{});
+        return r;
     }
 
-    friend constexpr auto operator-(Vector const& v) -> Vector
+    [[nodiscard]] friend constexpr auto
+    operator+(Vector const& v1, Vector const& v2) -> Vector
     {
-        return operator_unary_negate_impl(
-            v, std::make_index_sequence<Vector::size>{});
+        auto r = Vector{};
+        std::transform(
+            v1.cbegin(), v1.cend(), v2.cbegin(), r.begin(), std::plus{});
+        return r;
     }
 
-    template <std::size_t... Is>
-    friend constexpr auto operator_binary_sum_impl(
-        Vector const& v1, Vector const& v2, std::index_sequence<Is...>)
-        -> Vector
-    {
-        auto const coords_v1{v1.coords()};
-        auto const coords_v2{v2.coords()};
-
-        return {(std::get<Is>(coords_v1) + std::get<Is>(coords_v2))...};
-    }
-
-    friend constexpr auto operator+(Vector const& v1, Vector const& v2)
-        -> Vector
-    {
-        return operator_binary_sum_impl(
-            v1, v2, std::make_index_sequence<Vector::size>{});
-    }
-
-    template <std::size_t... Is>
-    friend constexpr auto operator_scalar_prod_impl(
-        Vector const& v,
-        Vector::coord_type const& s,
-        std::index_sequence<Is...>) -> Vector
-    {
-        auto const coords_v{v.coords()};
-
-        return {(s * std::get<Is>(coords_v))...};
-    }
-
-    friend constexpr auto
+    [[nodiscard]] friend constexpr auto
     operator*(Vector const& v, Vector::coord_type const& s) -> Vector
     {
-        return operator_scalar_prod_impl(
-            v, s, std::make_index_sequence<Vector::size>{});
+        auto r = Vector{};
+        std::transform(v.cbegin(), v.cend(), r.begin(), [s](auto x) {
+            return s * x;
+        });
+        return r;
     }
 
-    friend constexpr auto
+    [[nodiscard]] friend constexpr auto
     operator*(Vector::coord_type const& s, Vector const& v) -> Vector
     {
         return v * s;
     }
 
-    template <std::size_t... Is>
-    friend constexpr auto norm_impl(Vector const& v, std::index_sequence<Is...>)
+    [[nodiscard]] friend constexpr auto norm(Vector const& v)
     {
-        using unused = int[];
-        Vector::coord_type ret{};
-        static_cast<void>(unused{
-            0, (ret += v.template get<Is>() * v.template get<Is>(), 0)...});
-
-        return ret;
-    }
-
-    friend constexpr auto norm(Vector const& v)
-    {
-        return norm_impl(v, std::make_index_sequence<Vector::size>{});
+        return std::inner_product(
+            v.cbegin(), v.cend(), v.cbegin(), Vector::coord_type{});
     }
 };
 
-/// A simple 3-d point class
+/// A simple N-d point class
 template <class T, std::size_t N>
 class Point : public Entity<Point<T, N>> {
   public:
     static constexpr std::size_t size = N;
+
+    Point() = default;
 
     template <class... Args>
     constexpr Point(Args&&... args) : Entity<Point>(std::forward<Args>(args)...)
     {}
 
   private:
-    template <class VecType, std::size_t VecSize, std::size_t... Is>
-    friend constexpr auto operator_vector_point_sum_impl(
-        Point const& p,
-        Vector<VecType, VecSize> const& v,
-        std::index_sequence<Is...>) -> Point
+    [[nodiscard]] friend constexpr auto
+    operator+(Point const& p, Vector<T, N> const& v) -> Point
     {
-        auto const coords_p{p.coords()};
-        auto const coords_v{v.coords()};
-
-        return {(std::get<Is>(coords_p) + std::get<Is>(coords_v))...};
-    }
-
-    template <class VecType, std::size_t VecSize>
-    friend constexpr auto
-    operator+(Point const& p, Vector<VecType, VecSize> const& v)
-        -> std::enable_if_t<
-            std::is_same<typename Point::coord_type, VecType>::value &&
-                (Point::size == VecSize),
-            Point>
-    {
-        return operator_vector_point_sum_impl(
-            p, v, std::make_index_sequence<Point::size>{});
+        auto r = Point{};
+        std::transform(
+            p.cbegin(), p.cend(), v.cbegin(), r.begin(), std::plus{});
+        return r;
     }
 };
 

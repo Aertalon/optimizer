@@ -1,3 +1,5 @@
+#pragma once
+
 #include "src/dualnumbers/dualnumbers.hpp"
 #include "src/spaces/spaces.hpp"
 
@@ -5,37 +7,33 @@
 #include <array>
 #include <iostream>
 
-#pragma once
-
 namespace convopt {
 
 using dualnumbers::DualNumber;
 using spaces::Point;
 using spaces::Vector;
 
-template <std::size_t I, std::size_t N, class T, std::size_t... Is>
-constexpr auto
-evaluated_point_at_index(Point<T, N> x, std::index_sequence<Is...>)
-    -> Point<DualNumber, N>
-{
-    Point<DualNumber, N> point = {
-        DualNumber{x.template get<Is>(), Is == I ? 1.0F : 0.0F}...};
-    return point;
-}
-
-template <std::size_t N, class T, class F, std::size_t... Is>
-constexpr auto gradient_impl(Point<T, N> x, F cost, std::index_sequence<Is...>)
-    -> Vector<T, N>
-{
-    return {
-        (cost(evaluated_point_at_index<Is>(x, std::make_index_sequence<N>{}))
-             .imag())...};
-}
-
 template <std::size_t N, class T, class F>
-constexpr auto gradient(Point<T, N> x, F cost) -> Vector<T, N>
+constexpr auto gradient(Point<T, N> p, F cost) -> Vector<T, N>
 {
-    return gradient_impl(x, cost, std::make_index_sequence<N>{});
+    const auto d = [&p]() {
+        auto d = Point<DualNumber, N>{};
+        std::transform(p.cbegin(), p.cend(), d.begin(), [](auto x) {
+            return DualNumber{x};
+        });
+        return d;
+    }();
+
+    auto r = Vector<T, N>{};
+
+    for (auto i = 0U; i < N; ++i) {
+        auto di = d;
+        di[i].imag() = 1.0F;
+
+        r[i] = cost(di).imag();
+    }
+
+    return r;
 }
 
 template <std::size_t N, class T, class F>
