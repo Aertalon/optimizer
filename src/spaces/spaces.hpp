@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <array>
+#include <concepts>
 #include <functional>
 #include <iostream>
 #include <numeric>
@@ -84,8 +85,9 @@ class Entity<Derived<T, N>> : std::array<T, N> {
     constexpr Entity(coords_type coords) : coords_type{std::move(coords)} {}
 
     template <class... Args>
-    constexpr explicit Entity(coord_type x, Args&&... xs)
-        : coords_type({x, xs...})
+    requires(std::same_as<coord_type, std::remove_cvref_t<Args>>&&...)  //
+        explicit(sizeof...(Args) == 1) constexpr Entity(Args&&... xs)
+        : coords_type({std::forward<Args>(xs)...})
     {}
 };
 
@@ -99,7 +101,8 @@ class Vector : public Entity<Vector<T, N>> {
     Vector() = default;
 
     template <class... Args>
-    constexpr Vector(Args&&... args)
+    requires(std::same_as<coord_type, std::remove_cvref_t<Args>>&&...)  //
+        explicit(sizeof...(Args) == 1) constexpr Vector(Args&&... args)
         : Entity<Vector<T, N>>(std::forward<Args>(args)...)
     {}
 
