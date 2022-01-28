@@ -160,7 +160,9 @@ class Point : public Entity<Point<T, N>> {
     Point() = default;
 
     template <class... Args>
-    constexpr Point(Args&&... args) : Entity<Point>(std::forward<Args>(args)...)
+    requires(std::same_as<T, std::remove_cvref_t<Args>>&&...)  //
+        explicit(sizeof...(Args) == 1) constexpr Point(Args&&... args)
+        : Entity<Point>(std::forward<Args>(args)...)
     {}
 
   private:

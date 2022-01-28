@@ -8,6 +8,6 @@ cc_test(
         "//src/convopt",
         "//src/dualnumbers",
         "//src/spaces",
-        "@com_google_googletest//:gtest_main",
+        "@ut",
     ],
 )
