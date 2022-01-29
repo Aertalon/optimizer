@@ -58,7 +58,7 @@ constexpr auto exp(float const& x) -> float
 
 constexpr auto exp(DualNumber const& x) -> DualNumber
 {
-    return {exp(x.real()), x.imag() * exp(x.real())};
+    return {exp(x.real), x.imag * exp(x.real)};
 }
 
 }  // namespace opt
