@@ -6,6 +6,11 @@ opt_cc_test(
 )
 
 opt_cc_test(
+    name = "math",
+    size = "small",
+)
+
+opt_cc_test(
     name = "spaces",
     size = "small",
 )
