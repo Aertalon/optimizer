@@ -146,6 +146,12 @@ struct vector : entity<vector<T, N>> {
         return r;
     }
 
+    [[nodiscard]] friend constexpr auto
+    operator-(const vector& v1, const vector& v2) -> vector
+    {
+        return v1 + (-v2);
+    }
+
     [[nodiscard]] friend constexpr auto operator*(const vector& v, const T& s)
         -> vector
     {
@@ -183,12 +189,36 @@ struct point : entity<point<T, N>> {
     {}
 
     [[nodiscard]] friend constexpr auto
+    operator-(const point& p, const point& q) -> vector<T, N>
+    {
+        auto v = vector<T, N>{};
+        std::transform(
+            p.cbegin(), p.cend(), q.cbegin(), v.begin(), std::minus{});
+        return v;
+    }
+
+    [[nodiscard]] friend constexpr auto
+    operator-(const point& p, const vector<T, N>& v) -> point
+    {
+        auto r = point{};
+        std::transform(
+            p.cbegin(), p.cend(), v.cbegin(), r.begin(), std::minus{});
+        return r;
+    }
+
+    [[nodiscard]] friend constexpr auto
     operator+(const point& p, const vector<T, N>& v) -> point
     {
         auto r = point{};
         std::transform(
             p.cbegin(), p.cend(), v.cbegin(), r.begin(), std::plus{});
         return r;
+    }
+
+    [[nodiscard]] friend constexpr auto
+    operator+(const vector<T, N>& v, const point& p) -> point
+    {
+        return p + v;
     }
 };
 
