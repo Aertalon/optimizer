@@ -53,8 +53,7 @@ struct DualNumber {
     [[nodiscard]] friend constexpr auto operator-(DualNumber const& x)
         -> DualNumber
     {
-        // TODO(enrlov): is this right?
-        return {-x.real, -x.real};
+        return {-x.real, -x.imag};
     }
 };
 
