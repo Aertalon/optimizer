@@ -20,7 +20,7 @@ constexpr auto exp(T x)  // clang-format on
     constexpr std::size_t taylor_terms{10U};
     for (std::size_t i{1U}; i < taylor_terms; ++i) {
         power *= x;
-        factorial *= i;
+        factorial *= static_cast<decltype(factorial)>(i);
 
         acc += power / factorial;
     }

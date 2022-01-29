@@ -1,3 +1,5 @@
+load("//bazel:rules.bzl", "opt_cc_library")
+
 exports_files(
     [".clang-tidy"],
     visibility = ["//:__subpackages__"],
@@ -21,9 +23,8 @@ filegroup(
     visibility = ["@mcss//:__pkg__"],
 )
 
-cc_library(
+opt_cc_library(
     name = "optimizer",
     hdrs = [":headers"],
-    copts = PROJECT_DEFAULT_COPTS,
     visibility = ["//visibility:public"],
 )
