@@ -6,8 +6,7 @@
 
 // NOLINTBEGIN(readability-magic-numbers)
 
-namespace convopt {
-
+namespace opt {
 namespace test {}
 
 class Cost {
@@ -18,7 +17,7 @@ class Cost {
         auto x_part{x.template get<0>() - T{3.0F}};
         auto y_part{x.template get<1>() - T{-1.0F}};
 
-        return dualnumbers::exp(x_part * x_part) + y_part * y_part;
+        return exp(x_part * x_part) + y_part * y_part;
     }
 };
 
@@ -26,8 +25,8 @@ void convopt_gradient()
 {
     constexpr Cost cost{};
     constexpr Point<float, 2> p{1.0F, 0.0F};
-    static_assert(gradient(p, cost) ==
-                  Vector<float, 2>{-4.0F * dualnumbers::exp(4.0F), 2.0F});
+    static_assert(
+        gradient(p, cost) == Vector<float, 2>{-4.0F * exp(4.0F), 2.0F});
 }
 
 void convopt_optimize()
@@ -41,6 +40,6 @@ void convopt_optimize()
 
 // Add tests
 
-}  // namespace convopt
+}  // namespace opt
 
 // NOLINTEND(readability-magic-numbers)

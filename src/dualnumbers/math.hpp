@@ -4,7 +4,7 @@
 
 #include <cmath>
 
-namespace dualnumbers {
+namespace opt {
 
 template <std::size_t N>
 constexpr auto factorial() -> std::size_t
@@ -61,4 +61,4 @@ constexpr auto exp(DualNumber const& x) -> DualNumber
     return {exp(x.real()), x.imag() * exp(x.real())};
 }
 
-}  // namespace dualnumbers
+}  // namespace opt

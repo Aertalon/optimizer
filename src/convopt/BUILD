@@ -1,8 +1,5 @@
 cc_library(
     name = "convopt",
-    srcs = [
-        "convopt.cpp",
-    ],
     hdrs = [
         "convopt.hpp",
     ],

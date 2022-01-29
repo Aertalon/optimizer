@@ -4,7 +4,7 @@
 
 // NOLINTBEGIN(readability-magic-numbers)
 
-namespace spaces {
+namespace opt {
 
 namespace test {}
 
@@ -45,6 +45,6 @@ void spaces_point()
     static_assert(zero + v == p1);
 }
 
-}  // namespace spaces
+}  // namespace opt
 
 // NOLINTEND(readability-magic-numbers)
