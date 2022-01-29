@@ -10,6 +10,7 @@ filegroup(
         "src/dualnumbers.hpp",
         "src/math.hpp",
         "src/spaces.hpp",
+        "src/stdx/traits.hpp",
     ],
     visibility = ["@mcss//:__pkg__"],
 )
