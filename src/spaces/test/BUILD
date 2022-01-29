@@ -6,6 +6,6 @@ cc_test(
     srcs = ["spaces_test.cpp"],
     deps = [
         "//src/spaces",
-        "@com_google_googletest//:gtest_main",
+        "@ut",
     ],
 )

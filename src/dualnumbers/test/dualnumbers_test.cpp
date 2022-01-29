@@ -1,29 +1,40 @@
 #include "src/dualnumbers/dualnumbers.hpp"
 
-#include <gtest/gtest.h>
+#include "boost/ut.hpp"
 
-namespace opt {
+// NOLINTBEGIN(readability-magic-numbers)
 
-namespace test {}
-
-void dualnumbers_sum()
+auto main() -> int
 {
-    constexpr DualNumber x{1.0F, 0.0F};
-    constexpr DualNumber y{0.0F, 1.0F};
+    using namespace boost::ut;
+    using opt::DualNumber;
 
-    static_assert(x + y == DualNumber{1.0F, 1.0F});
-    static_assert(y + x == DualNumber{1.0F, 1.0F});
+    test("dualnumbers sum") = [] {
+        constexpr DualNumber x{1.0F, 0.0F};
+        constexpr DualNumber y{0.0F, 1.0F};
+
+        expect(constant<eq(x + y, DualNumber{1.0F, 1.0F})>);
+        expect(constant<eq(y + x, DualNumber{1.0F, 1.0F})>);
+    };
+
+    test("dualnumbers negate") = [] {
+        constexpr DualNumber x{1.0F, -42.0F};
+
+        expect(constant<eq(-x, DualNumber{-1.0F, 42.0F})>);
+        // NOLINTNEXTLINE(misc-redundant-expression)
+        expect(constant<eq(x + (-x), x - x)>);
+        expect(constant<eq(x + (-x), DualNumber{})>);
+    };
+
+    test("dualnumbers product") = [] {
+        constexpr DualNumber x{1.0F, 0.0F};
+        constexpr DualNumber y{0.0F, 1.0F};
+
+        expect(constant<eq(x * y, DualNumber{0.0F, 1.0F})>);
+        expect(constant<eq(y * x, DualNumber{0.0F, 1.0F})>);
+    };
+
+    // Add tests for / and affine and nonlinear functions
 }
 
-void dualnumbers_product()
-{
-    constexpr DualNumber x{1.0F, 0.0F};
-    constexpr DualNumber y{0.0F, 1.0F};
-
-    static_assert(x * y == DualNumber{0.0F, 1.0F});
-    static_assert(y * x == DualNumber{0.0F, 1.0F});
-}
-
-// Add tests for / and affine and nonlinear functions
-
-}  // namespace opt
+// NOLINTEND(readability-magic-numbers)

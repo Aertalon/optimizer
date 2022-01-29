@@ -6,6 +6,6 @@ cc_test(
     srcs = ["dualnumbers_test.cpp"],
     deps = [
         "//src/dualnumbers",
-        "@com_google_googletest//:gtest_main",
+        "@ut",
     ],
 )

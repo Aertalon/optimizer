@@ -15,36 +15,38 @@ template <class T>
 class Entity {};
 
 template <class T, std::size_t N, template <class, std::size_t> class Derived>
-class Entity<Derived<T, N>> : std::array<T, N> {
-  public:
-    static constexpr std::size_t size{N};
-    using coord_type = T;
-    using coords_type = std::array<coord_type, size>;
+struct Entity<Derived<T, N>> {
+    using coords_type = std::array<T, N>;
 
-    [[nodiscard]] constexpr auto coords() & -> coords_type&
-    {
-        return static_cast<coords_type&>(*this);
-    }
-    [[nodiscard]] constexpr auto coords() const& -> const coords_type&
-    {
-        return static_cast<const coords_type&>(*this);
-    }
+    coords_type data{};
 
-    template <std::size_t I>
-    [[nodiscard]] constexpr auto get() const& -> const coord_type&
+    [[nodiscard]] constexpr auto begin() & noexcept { return data.begin(); }
+    [[nodiscard]] constexpr auto begin() const& noexcept
     {
-        return std::get<I>(coords());
+        return data.begin();
+    }
+    [[nodiscard]] constexpr auto cbegin() const& noexcept
+    {
+        return data.cbegin();
     }
 
-    using coords_type::begin;
-    using coords_type::cbegin;
-    using coords_type::cend;
-    using coords_type::end;
-    using coords_type::operator[];
+    [[nodiscard]] constexpr auto end() & noexcept { return data.end(); }
+    [[nodiscard]] constexpr auto end() const& noexcept { return data.end(); }
+    [[nodiscard]] constexpr auto cend() const& noexcept { return data.cend(); }
 
-  private:
+    [[nodiscard]] constexpr auto
+    operator[](typename coords_type::size_type n) & -> auto&
+    {
+        return data[n];
+    }
+    [[nodiscard]] constexpr auto
+    operator[](typename coords_type::size_type n) const& -> auto&
+    {
+        return data[n];
+    }
+
     [[nodiscard]] friend constexpr auto
-    close_to(Entity const& lhs, Entity const& rhs, coord_type tol) -> bool
+    close_to(Entity const& lhs, Entity const& rhs, T tol) -> bool
     {
         // TODO move to common location or replace with constexpr math lib
         constexpr auto abs = [](auto x) {
@@ -67,7 +69,7 @@ class Entity<Derived<T, N>> : std::array<T, N> {
     friend auto operator<<(std::ostream& os, Entity const& p) -> std::ostream&
     {
         os << "(";
-        os << p.coords()[0];
+        os << p[0];
 
         // TODO use `std::views::drop` once clang implements it
         for (auto x : std::ranges::drop_view{p, 1}) {
@@ -81,37 +83,45 @@ class Entity<Derived<T, N>> : std::array<T, N> {
     [[nodiscard]] friend constexpr auto
     operator==(Entity const& lhs, Entity const& rhs) -> bool = default;
 
+  private:
     friend Derived<T, N>;
 
-    constexpr Entity() = default;
+    // Defaulted move constructors are auto noexcept
+    // NOLINTBEGIN(performance-noexcept-move-constructor)
 
-    constexpr Entity(coords_type coords) : coords_type{std::move(coords)} {}
+    Entity() = default;
+    ~Entity() = default;
+    Entity(Entity&&) = default;
+    Entity(const Entity&) = default;
+    auto operator=(Entity&&) -> Entity& = default;
+    auto operator=(const Entity&) -> Entity& = default;
 
-    // NOLINTBEGIN(modernize-use-equals-delete)
+    // NOLINTEND(performance-noexcept-move-constructor)
+
+    // Tidy false positive. This constructor is private to allow use by friended
+    // types NOLINTBEGIN(modernize-use-equals-delete)
+
     template <class... Args>
-    requires(std::same_as<coord_type, std::remove_cvref_t<Args>>&&...)  //
+    requires(std::same_as<T, std::remove_cvref_t<Args>>&&...)  //
         explicit(sizeof...(Args) == 1) constexpr Entity(Args&&... xs)
-        : coords_type({std::forward<Args>(xs)...})
+        : data{std::forward<Args>(xs)...}
     {}
+
     // NOLINTEND(modernize-use-equals-delete)
 };
 
 /// A simple vector class
 template <class T, std::size_t N>
-class Vector : public Entity<Vector<T, N>> {
-  public:
-    static constexpr std::size_t size = N;
-    using coord_type = typename Entity<Vector<T, N>>::coord_type;
+struct Vector : Entity<Vector<T, N>> {
 
     Vector() = default;
 
     template <class... Args>
-    requires(std::same_as<coord_type, std::remove_cvref_t<Args>>&&...)  //
+    requires(std::same_as<T, std::remove_cvref_t<Args>>&&...)  //
         explicit(sizeof...(Args) == 1) constexpr Vector(Args&&... args)
         : Entity<Vector<T, N>>(std::forward<Args>(args)...)
     {}
 
-  private:
     [[nodiscard]] friend constexpr auto operator-(Vector const& v) -> Vector
     {
         auto r = Vector{};
@@ -128,8 +138,8 @@ class Vector : public Entity<Vector<T, N>> {
         return r;
     }
 
-    [[nodiscard]] friend constexpr auto
-    operator*(Vector const& v, Vector::coord_type const& s) -> Vector
+    [[nodiscard]] friend constexpr auto operator*(Vector const& v, T const& s)
+        -> Vector
     {
         auto r = Vector{};
         std::transform(v.cbegin(), v.cend(), r.begin(), [s](auto x) {
@@ -138,32 +148,29 @@ class Vector : public Entity<Vector<T, N>> {
         return r;
     }
 
-    [[nodiscard]] friend constexpr auto
-    operator*(Vector::coord_type const& s, Vector const& v) -> Vector
+    [[nodiscard]] friend constexpr auto operator*(T const& s, Vector const& v)
+        -> Vector
     {
         return v * s;
     }
 
     [[nodiscard]] friend constexpr auto norm(Vector const& v)
     {
-        return std::inner_product(
-            v.cbegin(), v.cend(), v.cbegin(), Vector::coord_type{});
+        return std::inner_product(v.cbegin(), v.cend(), v.cbegin(), T{});
     }
 };
 
 /// A simple N-d point class
 template <class T, std::size_t N>
-class Point : public Entity<Point<T, N>> {
-  public:
-    static constexpr std::size_t size = N;
-
+struct Point : Entity<Point<T, N>> {
     Point() = default;
 
     template <class... Args>
-    constexpr Point(Args&&... args) : Entity<Point>(std::forward<Args>(args)...)
+    requires(std::same_as<T, std::remove_cvref_t<Args>>&&...)  //
+        explicit(sizeof...(Args) == 1) constexpr Point(Args&&... args)
+        : Entity<Point>(std::forward<Args>(args)...)
     {}
 
-  private:
     [[nodiscard]] friend constexpr auto
     operator+(Point const& p, Vector<T, N> const& v) -> Point
     {
