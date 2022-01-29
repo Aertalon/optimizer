@@ -3,62 +3,30 @@
 #include "src/dualnumbers.hpp"
 
 #include <cmath>
+#include <concepts>
+#include <type_traits>
 
 namespace opt {
 
-template <std::size_t N>
-constexpr auto factorial() -> std::size_t
+constexpr auto exp(std::floating_point auto x)
 {
-    return N * factorial<N - 1>();
-}
+    auto acc = decltype(x){1};
+    auto power = acc;
+    auto factorial = acc;
 
-template <>
-constexpr auto factorial<0>() -> std::size_t
-{
-    return 1;
-}
+    constexpr std::size_t taylor_terms{10U};
+    for (std::size_t i{1U}; i < taylor_terms; ++i) {
+        power *= x;
+        factorial *= i;
 
-template <std::size_t N>
-struct power {
-    template <class T>
-    [[nodiscard]] constexpr auto operator()(T const& x) const -> T
-    {
-        return x * power<N - 1>{}(x);
+        acc += power / factorial;
     }
-};
-
-template <>
-struct power<0> {
-    template <class T>
-    [[nodiscard]] constexpr auto operator()(T const&) const -> T
-    {
-        return T{1};
-    }
-};
-
-// Dumb exponential for exposition only
-template <std::size_t... Is>
-constexpr auto exp_impl(float const& x, std::index_sequence<Is...>) -> float
-{
-    using unused = int[];
-    float ret{};
-
-    static_cast<void>(unused{
-        0,
-        (ret += power<Is>{}(x) / static_cast<float>(factorial<Is>()), 0)...});
-
-    return ret;
-}
-
-constexpr auto exp(float const& x) -> float
-{
-    // NOLINTNEXTLINE(readability-magic-numbers)
-    return exp_impl(x, std::make_index_sequence<10>{});
+    return acc;
 }
 
 constexpr auto exp(Dual auto const& x)
 {
-    return dual{exp(x.real), x.imag * exp(x.real)};
+    return std::remove_cvref_t<decltype(x)>{exp(x.real), x.imag * exp(x.real)};
 }
 
 }  // namespace opt
