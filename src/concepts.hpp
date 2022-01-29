@@ -2,6 +2,8 @@
 
 #include <concepts>
 #include <cstddef>
+#include <type_traits>
+#include <utility>
 
 namespace opt {
 
@@ -58,12 +60,20 @@ concept Indexable =
     { b[n] } -> detail::is_const_lvalue_ref;
   };
 
+template <class T>
+concept TupleSizable =
+  requires {
+    { std::tuple_size<T>::value  } -> std::same_as<const std::size_t&>;
+  };
+
 template <Indexable T>
 using scalar_t = std::remove_cvref_t<decltype(std::declval<T&>()[0])>;
 
 template <class T, class U = scalar_t<T>>
 concept Vector =
+  Arithmetic<U> &&
   std::regular<T> &&
+  TupleSizable<T> &&
   Indexable<T> &&
   Addable<T> &&
   Subtractible<T> &&
@@ -80,7 +90,10 @@ using distance_t =
 
 template <class T, class U = distance_t<T>>
 concept Point =
+  Vector<U> &&
   std::regular<T> &&
+  TupleSizable<T> &&
+  (std::tuple_size<T>::value == std::tuple_size<U>::value) &&
   Indexable<T> &&
   Addable<const T&, const U&, T> &&
   Addable<const U&, const T&, T> &&

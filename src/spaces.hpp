@@ -226,3 +226,11 @@ template <class... Ts>
 point(Ts...) -> point<std::common_type_t<Ts...>, sizeof...(Ts)>;
 
 }  // namespace opt
+
+template <class T, std::size_t Size>
+struct std::tuple_size<opt::vector<T, Size>>
+    : std::integral_constant<std::size_t, Size> {};
+
+template <class T, std::size_t Size>
+struct std::tuple_size<opt::point<T, Size>>
+    : std::integral_constant<std::size_t, Size> {};

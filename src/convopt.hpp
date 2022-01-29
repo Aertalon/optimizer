@@ -10,25 +10,26 @@
 
 namespace opt {
 
-// TODO(enrlov): F must be invocable with T
-template <std::size_t N, class T, class F>
-constexpr auto gradient(point<T, N> p, F cost) -> distance_t<point<T, N>>
-{
-    // TODO(olee): Should point also be a range?
-    // TODO(olee): Should point also be sized?
-    // TODO(olee): Should point be rebindable?
+// TODO(enrlov): F must be invocable with P and opt::point<dual<scalar_t<P>>>
+// and return scalar_t<...> of the input
 
-    // using T = scalar_t<distance_t<decltype(p)>>;
+template <Point P, class F>
+constexpr auto gradient(const P& p, F cost) -> distance_t<P>
+{
+    constexpr auto N = std::tuple_size_v<P>;
+    using T = scalar_t<P>;
 
     const auto d = [&p]() {
-        auto d = point<dual<T>, N>{};
-        std::transform(p.cbegin(), p.cend(), d.begin(), [](auto x) {
-            return dual<T>{.real = x};
-        });
+        auto d = opt::point<dual<T>, N>{};
+
+        for (std::size_t i{0U}; i < N; ++i) {
+            d[i].real = p[i];
+        }
+
         return d;
     }();
 
-    auto r = distance_t<point<T, N>>{};
+    auto r = distance_t<P>{};
 
     for (auto i = 0U; i < N; ++i) {
         auto di = d;
@@ -40,11 +41,11 @@ constexpr auto gradient(point<T, N> p, F cost) -> distance_t<point<T, N>>
     return r;
 }
 
-// TODO(enrlov): F must be invocable with T
 template <Point P, class F>
 constexpr auto line_search(P orig, distance_t<P> direction, F cost) -> P
 {
-    // Implement actual linesearch
+    // TODO(enrlov): Implement actual linesearch
+    // FIXME don't assume scalar type is constructible from float
     constexpr scalar_t<P> lambda{0.001F};  // NOLINT(readability-magic-numbers)
 
     while (true) {
@@ -61,11 +62,13 @@ constexpr auto line_search(P orig, distance_t<P> direction, F cost) -> P
 template <Vector V>
 constexpr auto stopping_criterion(const V& g) -> bool
 {
+    // FIXME don't assume scalar type is constructible from float
     constexpr scalar_t<V> tol{0.001F};  // NOLINT(readability-magic-numbers)
+
+    // TODO define norm generically
     return norm(g) < tol;
 }
 
-// TODO(enrlov): F must be invocable with T
 template <Point P, class F>
 constexpr auto optimize(P x, F c) -> P
 {

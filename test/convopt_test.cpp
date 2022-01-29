@@ -12,14 +12,14 @@ auto main() -> int
     using opt::point;
     using opt::vector;
 
-    constexpr auto cost =
-        []<class T, std::size_t N, template <class, std::size_t> class P>(
-            const P<T, N>& x) {
-            auto x_part = x[0] - T{3.0F};
-            auto y_part = x[1] - T{-1.0F};
+    constexpr auto cost = []<opt::Point P>(const P& x) {
+        using T = opt::scalar_t<P>;
 
-            return opt::exp(x_part * x_part) + y_part * y_part;
-        };
+        auto x_part = x[0] - T{3.0F};
+        auto y_part = x[1] - T{-1.0F};
+
+        return opt::exp(x_part * x_part) + y_part * y_part;
+    };
 
     constexpr point p{1.0F, 0.0F};
 
