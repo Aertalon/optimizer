@@ -6,6 +6,7 @@ exports_files(
 filegroup(
     name = "headers",
     srcs = [
+        "src/concepts.hpp",
         "src/convopt.hpp",
         "src/dualnumbers.hpp",
         "src/math.hpp",

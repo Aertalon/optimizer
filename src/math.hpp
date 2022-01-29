@@ -1,14 +1,17 @@
 #pragma once
 
-#include "src/dualnumbers.hpp"
+#include "concepts.hpp"
+#include "dualnumbers.hpp"
 
 #include <cmath>
-#include <concepts>
+#include <cstddef>
 #include <type_traits>
 
 namespace opt {
 
-constexpr auto exp(std::floating_point auto x)
+template <Arithmetic T>  // clang-format off
+  requires(not Dual<T>)
+constexpr auto exp(T x)  // clang-format on
 {
     auto acc = decltype(x){1};
     auto power = acc;

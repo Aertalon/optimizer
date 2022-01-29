@@ -1,14 +1,14 @@
 #pragma once
 
+#include "concepts.hpp"
 #include "stdx/traits.hpp"
 
-#include <concepts>
 #include <iostream>
 
 namespace opt {
 
 // TODO replace with Real number concept
-template <std::floating_point T>
+template <Arithmetic T>
 struct dual {
     T real{};
     T imag{};

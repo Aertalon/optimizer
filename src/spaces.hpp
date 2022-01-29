@@ -1,10 +1,11 @@
 #pragma once
 
+#include "concepts.hpp"
 #include "stdx/traits.hpp"
 
 #include <algorithm>
 #include <array>
-#include <concepts>
+#include <cstddef>
 #include <functional>
 #include <iostream>
 #include <numeric>
@@ -19,7 +20,10 @@ class entity {
                   "This primary template should never be instantiated.");
 };
 
-template <class T, std::size_t N, template <class, std::size_t> class derived>
+template <Arithmetic T,
+          std::size_t N,
+          template <class, std::size_t>
+          class derived>
 struct entity<derived<T, N>> {
     using coords_type = std::array<T, N>;
 
@@ -106,9 +110,9 @@ struct entity<derived<T, N>> {
     // Tidy false positive. This constructor is private to allow use by friended
     // types NOLINTBEGIN(modernize-use-equals-delete)
 
-    template <class... Args>
-    requires(std::same_as<T, std::remove_cvref_t<Args>>&&...)  //
-        explicit(sizeof...(Args) == 1) constexpr entity(Args&&... xs)
+    template <class... Args>  // clang-format off
+      requires(std::same_as<T, std::remove_cvref_t<Args>> && ...)
+    explicit(sizeof...(Args) == 1) constexpr entity(Args&&... xs)  // clang-format on
         : data{std::forward<Args>(xs)...}
     {}
 
@@ -116,13 +120,13 @@ struct entity<derived<T, N>> {
 };
 
 /// A simple vector class
-template <class T, std::size_t N>
+template <Arithmetic T, std::size_t N>
 struct vector : entity<vector<T, N>> {
     vector() = default;
 
-    template <class... Args>
-    requires(std::same_as<T, std::remove_cvref_t<Args>>&&...)  //
-        explicit(sizeof...(Args) == 1) constexpr vector(Args&&... args)
+    template <class... Args>  // clang-format off
+      requires(std::same_as<T, std::remove_cvref_t<Args>> && ...)
+    explicit(sizeof...(Args) == 1) constexpr vector(Args&&... args)  // clang-format on
         : entity<vector<T, N>>(std::forward<Args>(args)...)
     {}
 
@@ -168,13 +172,13 @@ template <class... Ts>
 vector(Ts...) -> vector<std::common_type_t<Ts...>, sizeof...(Ts)>;
 
 /// A simple N-d point class
-template <class T, std::size_t N>
+template <Arithmetic T, std::size_t N>
 struct point : entity<point<T, N>> {
     point() = default;
 
-    template <class... Args>
-    requires(std::same_as<T, std::remove_cvref_t<Args>>&&...)  //
-        explicit(sizeof...(Args) == 1) constexpr point(Args&&... args)
+    template <class... Args>  // clang-format off
+      requires(std::same_as<T, std::remove_cvref_t<Args>> && ...)
+    explicit(sizeof...(Args) == 1) constexpr point(Args&&... args)  // clang-format on
         : entity<point>(std::forward<Args>(args)...)
     {}
 
