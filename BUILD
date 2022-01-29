@@ -3,18 +3,19 @@ exports_files(
     visibility = ["//:__subpackages__"],
 )
 
-# FIXME
 filegroup(
     name = "headers",
-    srcs = glob(["src/**/*.hpp"]),
+    srcs = [
+        "src/convopt.hpp",
+        "src/dualnumbers.hpp",
+        "src/math.hpp",
+        "src/spaces.hpp",
+    ],
     visibility = ["@mcss//:__pkg__"],
 )
 
-cc_binary(
+cc_library(
     name = "optimizer",
-    srcs = ["src/main.cpp"],
-    deps = [
-        "//src/convopt",
-        "//src/dualnumbers",
-    ],
+    hdrs = [":headers"],
+    visibility = ["//visibility:public"],
 )

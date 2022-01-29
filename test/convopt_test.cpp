@@ -1,6 +1,6 @@
-#include "src/convopt/convopt.hpp"
-#include "src/dualnumbers/math.hpp"
-#include "src/spaces/spaces.hpp"
+#include "src/convopt.hpp"
+#include "src/math.hpp"
+#include "src/spaces.hpp"
 
 #include "boost/ut.hpp"
 

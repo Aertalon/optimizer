@@ -1,7 +1,7 @@
 #pragma once
 
-#include "src/dualnumbers/dualnumbers.hpp"
-#include "src/spaces/spaces.hpp"
+#include "src/dualnumbers.hpp"
+#include "src/spaces.hpp"
 
 #include <algorithm>
 #include <array>

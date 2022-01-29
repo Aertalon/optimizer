@@ -1,6 +1,6 @@
 #pragma once
 
-#include "src/dualnumbers/dualnumbers.hpp"
+#include "src/dualnumbers.hpp"
 
 #include <cmath>
 

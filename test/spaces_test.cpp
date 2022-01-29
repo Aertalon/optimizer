@@ -1,4 +1,4 @@
-#include "src/spaces/spaces.hpp"
+#include "src/spaces.hpp"
 
 #include "boost/ut.hpp"
 

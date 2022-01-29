@@ -1,4 +1,4 @@
-#include "src/dualnumbers/dualnumbers.hpp"
+#include "src/dualnumbers.hpp"
 
 #include "boost/ut.hpp"
 
