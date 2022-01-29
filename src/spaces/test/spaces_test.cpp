@@ -2,6 +2,8 @@
 
 #include "boost/ut.hpp"
 
+#include <type_traits>
+
 // NOLINTBEGIN(readability-magic-numbers)
 
 auto main() -> int
@@ -20,18 +22,21 @@ auto main() -> int
         expect(constant<v1[1] == 0._f>);
         expect(constant<v1[2] == 0._f>);
 
-        constexpr auto expr1 = eq(v1 + zero, v1);
-        expect(expr1);
+        expect(constant<eq(v1 + zero, v1)>);
 
-        constexpr auto expr2 = eq(-v1, vec{-1.0F, 0.0F, 0.0F});
-        expect(expr2);
-        constexpr auto expr3 = eq(v1 + v2, vec{2.0F, 0.0F, -1.0F});
-        expect(expr3);
+        expect(constant<eq(-v1, vec{-1.0F, 0.0F, 0.0F})>);
+        expect(constant<eq(v1 + v2, vec{2.0F, 0.0F, -1.0F})>);
 
-        constexpr auto expr4 = eq(3.0F * v2, vec{3.0F, 0.0F, -3.0F});
-        expect(expr4);
-        constexpr auto expr5 = eq(v2 * 3.0F, vec{3.0F, 0.0F, -3.0F});
-        expect(expr5);
+        expect(constant<eq(3.0F * v2, vec{3.0F, 0.0F, -3.0F})>);
+        expect(constant<eq(v2 * 3.0F, vec{3.0F, 0.0F, -3.0F})>);
+    };
+
+    test("spaces vector not slicable") = [] {
+        expect(constant<not std::is_constructible_v<
+                   opt::Entity<opt::Vector<float, 3>>>>);
+        expect(constant<
+               not std::is_constructible_v<opt::Entity<opt::Vector<float, 3>>,
+                                           opt::Vector<float, 3>>>);
     };
 
     test("spaces vector norm") = [] {
@@ -45,11 +50,8 @@ auto main() -> int
         constexpr point p1{1.0F, 0.0F, 0.0F};
         constexpr vec v{1.0F, 0.0F, 0.0F};
 
-        constexpr auto expr1 = eq(zero + v, p1);
-        expect(expr1);
-
-        constexpr auto expr2 = eq(point{} + vec{1.0F, 0.0F, 0.0F}, p1);
-        expect(expr2);
+        expect(constant<eq(zero + v, p1)>);
+        expect(constant<eq(point{} + vec{1.0F, 0.0F, 0.0F}, p1)>);
     };
 }
 

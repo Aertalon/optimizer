@@ -24,15 +24,13 @@ auto main() -> int
     constexpr point p{1.0F, 0.0F};
 
     test("convopt gradient") = [&] {
-        constexpr auto expr =
-            eq(opt::gradient(p, cost), vec{-4.0F * opt::exp(4.0F), 2.0F});
-        expect(expr);
+        expect(constant<eq(
+                   opt::gradient(p, cost), vec{-4.0F * opt::exp(4.0F), 2.0F})>);
     };
 
     test("convopt optimize") = [&] {
-        constexpr auto expr =
-            close_to(opt::optimize(p, cost), point{3.0F, -1.0F}, 1e-3F);
-        expect(expr);
+        expect(constant<close_to(
+                   opt::optimize(p, cost), point{3.0F, -1.0F}, 1e-3F)>);
     };
 }
 
