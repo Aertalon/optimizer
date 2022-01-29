@@ -56,9 +56,9 @@ constexpr auto exp(float const& x) -> float
     return exp_impl(x, std::make_index_sequence<10>{});
 }
 
-constexpr auto exp(DualNumber const& x) -> DualNumber
+constexpr auto exp(Dual auto const& x)
 {
-    return {exp(x.real), x.imag * exp(x.real)};
+    return dual{exp(x.real), x.imag * exp(x.real)};
 }
 
 }  // namespace opt

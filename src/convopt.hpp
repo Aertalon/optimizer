@@ -13,9 +13,9 @@ template <std::size_t N, class T, class F>
 constexpr auto gradient(Point<T, N> p, F cost) -> Vector<T, N>
 {
     const auto d = [&p]() {
-        auto d = Point<DualNumber, N>{};
+        auto d = Point<dual<T>, N>{};
         std::transform(p.cbegin(), p.cend(), d.begin(), [](auto x) {
-            return DualNumber{.real = x};
+            return dual<T>{.real = x};
         });
         return d;
     }();
