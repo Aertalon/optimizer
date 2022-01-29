@@ -1,3 +1,8 @@
+exports_files(
+    [".clang-tidy"],
+    visibility = ["//:__subpackages__"],
+)
+
 load(
     "@local_config//:defs.bzl",
     "PROJECT_DEFAULT_COPTS",
@@ -19,5 +24,6 @@ filegroup(
 cc_library(
     name = "optimizer",
     hdrs = [":headers"],
+    copts = PROJECT_DEFAULT_COPTS,
     visibility = ["//visibility:public"],
 )
