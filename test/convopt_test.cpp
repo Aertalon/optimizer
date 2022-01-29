@@ -9,8 +9,8 @@
 auto main() -> int
 {
     using namespace boost::ut;
-    using point = opt::Point<float, 2>;
-    using vec = opt::Vector<float, 2>;
+    using opt::point;
+    using opt::vector;
 
     constexpr auto cost =
         []<class T, std::size_t N, template <class, std::size_t> class P>(
@@ -24,8 +24,8 @@ auto main() -> int
     constexpr point p{1.0F, 0.0F};
 
     test("convopt gradient") = [&] {
-        expect(constant<eq(
-                   opt::gradient(p, cost), vec{-4.0F * opt::exp(4.0F), 2.0F})>);
+        expect(constant<eq(opt::gradient(p, cost),
+                           vector{-4.0F * opt::exp(4.0F), 2.0F})>);
     };
 
     test("convopt optimize") = [&] {

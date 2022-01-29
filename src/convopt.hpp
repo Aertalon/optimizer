@@ -10,17 +10,17 @@
 namespace opt {
 
 template <std::size_t N, class T, class F>
-constexpr auto gradient(Point<T, N> p, F cost) -> Vector<T, N>
+constexpr auto gradient(point<T, N> p, F cost) -> vector<T, N>
 {
     const auto d = [&p]() {
-        auto d = Point<dual<T>, N>{};
+        auto d = point<dual<T>, N>{};
         std::transform(p.cbegin(), p.cend(), d.begin(), [](auto x) {
             return dual<T>{.real = x};
         });
         return d;
     }();
 
-    auto r = Vector<T, N>{};
+    auto r = vector<T, N>{};
 
     for (auto i = 0U; i < N; ++i) {
         auto di = d;
@@ -33,13 +33,13 @@ constexpr auto gradient(Point<T, N> p, F cost) -> Vector<T, N>
 }
 
 template <std::size_t N, class T, class F>
-constexpr auto line_search(Point<T, N> orig, Vector<T, N> direction, F cost)
-    -> Point<T, N>
+constexpr auto line_search(point<T, N> orig, vector<T, N> direction, F cost)
+    -> point<T, N>
 {
     // Implement actual linesearch
     // NOLINTNEXTLINE(readability-magic-numbers)
     T lambda{0.001F};
-    Point<T, N> end = {orig};
+    point<T, N> end = {orig};
     while (cost(end + lambda * direction) < cost(end)) {
         end = end + lambda * direction;
     }
@@ -47,7 +47,7 @@ constexpr auto line_search(Point<T, N> orig, Vector<T, N> direction, F cost)
 }
 
 template <std::size_t N, class T>
-constexpr auto stopping_criterion(Vector<T, N> const& g) -> bool
+constexpr auto stopping_criterion(vector<T, N> const& g) -> bool
 {
     // NOLINTNEXTLINE(readability-magic-numbers)
     float tol{0.001F};
@@ -56,7 +56,7 @@ constexpr auto stopping_criterion(Vector<T, N> const& g) -> bool
 
 // TODO(enrlov): F must be invocable with T
 template <std::size_t N, class T, class F>
-constexpr auto optimize(Point<T, N> initial, F c)
+constexpr auto optimize(point<T, N> initial, F c)
 {
     auto x{initial};
     auto g{gradient(x, c)};

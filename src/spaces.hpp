@@ -1,5 +1,7 @@
 #pragma once
 
+#include "stdx/traits.hpp"
+
 #include <algorithm>
 #include <array>
 #include <concepts>
@@ -12,10 +14,13 @@
 namespace opt {
 
 template <class T>
-class Entity {};
+class entity {
+    static_assert(stdx::dependent_false<T>,
+                  "This primary template should never be instantiated.");
+};
 
-template <class T, std::size_t N, template <class, std::size_t> class Derived>
-struct Entity<Derived<T, N>> {
+template <class T, std::size_t N, template <class, std::size_t> class derived>
+struct entity<derived<T, N>> {
     using coords_type = std::array<T, N>;
 
     coords_type data{};
@@ -46,7 +51,7 @@ struct Entity<Derived<T, N>> {
     }
 
     [[nodiscard]] friend constexpr auto
-    close_to(Entity const& lhs, Entity const& rhs, T tol) -> bool
+    close_to(const entity& lhs, const entity& rhs, T tol) -> bool
     {
         // TODO move to common location or replace with constexpr math lib
         constexpr auto abs = [](auto x) {
@@ -66,7 +71,7 @@ struct Entity<Derived<T, N>> {
             [abs, tol](auto x, auto y) { return abs(x - y) < tol; });
     }
 
-    friend auto operator<<(std::ostream& os, Entity const& p) -> std::ostream&
+    friend auto operator<<(std::ostream& os, const entity& p) -> std::ostream&
     {
         os << "(";
         os << p[0];
@@ -81,20 +86,20 @@ struct Entity<Derived<T, N>> {
     }
 
     [[nodiscard]] friend constexpr auto
-    operator==(Entity const& lhs, Entity const& rhs) -> bool = default;
+    operator==(const entity& lhs, const entity& rhs) -> bool = default;
 
   private:
-    friend Derived<T, N>;
+    friend derived<T, N>;
 
     // Defaulted move constructors are auto noexcept
     // NOLINTBEGIN(performance-noexcept-move-constructor)
 
-    Entity() = default;
-    ~Entity() = default;
-    Entity(Entity&&) = default;
-    Entity(const Entity&) = default;
-    auto operator=(Entity&&) -> Entity& = default;
-    auto operator=(const Entity&) -> Entity& = default;
+    entity() = default;
+    ~entity() = default;
+    entity(entity&&) = default;
+    entity(const entity&) = default;
+    auto operator=(entity&&) -> entity& = default;
+    auto operator=(const entity&) -> entity& = default;
 
     // NOLINTEND(performance-noexcept-move-constructor)
 
@@ -103,7 +108,7 @@ struct Entity<Derived<T, N>> {
 
     template <class... Args>
     requires(std::same_as<T, std::remove_cvref_t<Args>>&&...)  //
-        explicit(sizeof...(Args) == 1) constexpr Entity(Args&&... xs)
+        explicit(sizeof...(Args) == 1) constexpr entity(Args&&... xs)
         : data{std::forward<Args>(xs)...}
     {}
 
@@ -112,73 +117,78 @@ struct Entity<Derived<T, N>> {
 
 /// A simple vector class
 template <class T, std::size_t N>
-struct Vector : Entity<Vector<T, N>> {
-
-    Vector() = default;
+struct vector : entity<vector<T, N>> {
+    vector() = default;
 
     template <class... Args>
     requires(std::same_as<T, std::remove_cvref_t<Args>>&&...)  //
-        explicit(sizeof...(Args) == 1) constexpr Vector(Args&&... args)
-        : Entity<Vector<T, N>>(std::forward<Args>(args)...)
+        explicit(sizeof...(Args) == 1) constexpr vector(Args&&... args)
+        : entity<vector<T, N>>(std::forward<Args>(args)...)
     {}
 
-    [[nodiscard]] friend constexpr auto operator-(Vector const& v) -> Vector
+    [[nodiscard]] friend constexpr auto operator-(const vector& v) -> vector
     {
-        auto r = Vector{};
+        auto r = vector{};
         std::transform(v.cbegin(), v.cend(), r.begin(), std::negate{});
         return r;
     }
 
     [[nodiscard]] friend constexpr auto
-    operator+(Vector const& v1, Vector const& v2) -> Vector
+    operator+(const vector& v1, const vector& v2) -> vector
     {
-        auto r = Vector{};
+        auto r = vector{};
         std::transform(
             v1.cbegin(), v1.cend(), v2.cbegin(), r.begin(), std::plus{});
         return r;
     }
 
-    [[nodiscard]] friend constexpr auto operator*(Vector const& v, T const& s)
-        -> Vector
+    [[nodiscard]] friend constexpr auto operator*(const vector& v, const T& s)
+        -> vector
     {
-        auto r = Vector{};
+        auto r = vector{};
         std::transform(v.cbegin(), v.cend(), r.begin(), [s](auto x) {
             return s * x;
         });
         return r;
     }
 
-    [[nodiscard]] friend constexpr auto operator*(T const& s, Vector const& v)
-        -> Vector
+    [[nodiscard]] friend constexpr auto operator*(const T& s, const vector& v)
+        -> vector
     {
         return v * s;
     }
 
-    [[nodiscard]] friend constexpr auto norm(Vector const& v)
+    [[nodiscard]] friend constexpr auto norm(const vector& v)
     {
         return std::inner_product(v.cbegin(), v.cend(), v.cbegin(), T{});
     }
 };
 
+template <class... Ts>
+vector(Ts...) -> vector<std::common_type_t<Ts...>, sizeof...(Ts)>;
+
 /// A simple N-d point class
 template <class T, std::size_t N>
-struct Point : Entity<Point<T, N>> {
-    Point() = default;
+struct point : entity<point<T, N>> {
+    point() = default;
 
     template <class... Args>
     requires(std::same_as<T, std::remove_cvref_t<Args>>&&...)  //
-        explicit(sizeof...(Args) == 1) constexpr Point(Args&&... args)
-        : Entity<Point>(std::forward<Args>(args)...)
+        explicit(sizeof...(Args) == 1) constexpr point(Args&&... args)
+        : entity<point>(std::forward<Args>(args)...)
     {}
 
     [[nodiscard]] friend constexpr auto
-    operator+(Point const& p, Vector<T, N> const& v) -> Point
+    operator+(const point& p, const vector<T, N>& v) -> point
     {
-        auto r = Point{};
+        auto r = point{};
         std::transform(
             p.cbegin(), p.cend(), v.cbegin(), r.begin(), std::plus{});
         return r;
     }
 };
+
+template <class... Ts>
+point(Ts...) -> point<std::common_type_t<Ts...>, sizeof...(Ts)>;
 
 }  // namespace opt
