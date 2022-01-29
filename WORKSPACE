@@ -4,6 +4,15 @@ load(
     "git_repository",
     "new_git_repository",
 )
+load(
+    "//configuration:configure.bzl",
+    "configure_local_variables",
+)
+
+configure_local_variables(
+    name = "local_config",
+    defs_template = "//configuration:defs.bzl.in",
+)
 
 # Bazel needs a dependency on rules_cc repo (enrlov: isn't this built in?)
 # see https://google.github.io/googletest/quickstart-bazel.html
