@@ -20,12 +20,25 @@ struct base_fn {
     constexpr auto operator-() const
     {
         return  // clang-format off
-            []<class... Ts>(Ts&&... args)
-                -> decltype(-F{}(std::forward<Ts...>(args)...))
-            {
-              return -F{}(std::forward<Ts...>(args)...);
-            };  // clang-format on
+        []<class... Ts>(Ts&&... args)
+        -> decltype(-F{}(std::forward<Ts...>(args)...))
+        {
+          return -F{}(std::forward<Ts...>(args)...);
+        };  // clang-format on
     }
 };
+
+template <std::size_t N, std::default_initializable F>
+struct base_fn_n : base_fn<F> {
+    static constexpr auto count = N;
+
+    using base_fn<F>::base_fn;
+};
+
+template <std::size_t N, class F>
+constexpr auto make_base_fn_(F) -> base_fn_n<N, F>
+{
+    return {};
+}
 
 }  // namespace opt::impl

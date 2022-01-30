@@ -12,32 +12,35 @@
 namespace opt {
 namespace impl {
 
-inline constexpr base_fn exp = []<Real T>(T x) -> T {
-    return series::sum_first<10>(series::geometric{
+template <std::size_t N>
+inline constexpr auto exp_ = make_base_fn_<N>([]<Real T>(T x) -> T {
+    return series::sum_first<N>(series::geometric{
         1U,    //
         T{1},  //
         [x](auto n) { return x / T(n); }});
-};
+});
 
-inline constexpr impl::base_fn sin = []<Real T>(T x) -> T {
-    return series::sum_first<10>(series::geometric{
+template <std::size_t N>
+inline constexpr auto sin_ = make_base_fn_<N>([]<Real T>(T x) -> T {
+    return series::sum_first<N>(series::geometric{
         1U,  //
         x,   //
         [x](auto i) {
             const auto n = T(i);
             return (-1) * (x * x) / (2 * n) / (2 * n + 1);
         }});
-};
+});
 
-inline constexpr impl::base_fn cos = []<Real T>(T x) -> T {
-    return series::sum_first<10>(series::geometric{
+template <std::size_t N>
+inline constexpr auto cos_ = make_base_fn_<N>([]<Real T>(T x) -> T {
+    return series::sum_first<N>(series::geometric{
         1U,    //
         T{1},  //
         [x](auto i) {
             const auto n = T(i);
             return (-1) * (x * x) / (2 * n - 1) / (2 * n);
         }});
-};
+});
 
 template <std::default_initializable F, std::default_initializable G>
 struct dual_fn {
@@ -57,8 +60,17 @@ struct dual_fn {
 
 }  // namespace impl
 
-inline constexpr impl::dual_fn exp{impl::exp, impl::exp};
-inline constexpr impl::dual_fn sin{impl::sin, impl::cos};
-inline constexpr impl::dual_fn cos{impl::cos, -impl::sin};
+template <std::size_t N>
+inline constexpr impl::dual_fn exp_{impl::exp_<N>, impl::exp_<N>};
+
+template <std::size_t N>
+inline constexpr impl::dual_fn sin_{impl::sin_<N>, impl::cos_<N>};
+
+template <std::size_t N>
+inline constexpr impl::dual_fn cos_{impl::cos_<N>, -impl::sin_<N>};
+
+inline constexpr auto exp = exp_<10>;
+inline constexpr auto sin = sin_<10>;
+inline constexpr auto cos = cos_<10>;
 
 }  // namespace opt
