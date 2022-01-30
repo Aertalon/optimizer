@@ -7,7 +7,6 @@
 
 namespace opt {
 
-// TODO replace with Real number concept
 template <Arithmetic T>
 struct dual {
     T real{};
@@ -75,5 +74,8 @@ inline constexpr bool is_dual_v = is_dual<T>::value;
 
 template <class T>
 concept Dual = is_dual_v<T>;
+
+template <class T>
+concept Real = Arithmetic<T> && not Dual<T>;
 
 }  // namespace opt
