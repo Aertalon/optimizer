@@ -7,6 +7,7 @@
 
 #include <cmath>
 #include <cstddef>
+#include <iostream>
 #include <type_traits>
 
 namespace opt {

@@ -30,9 +30,9 @@ constexpr auto gradient(const P& p, F cost) -> distance_t<P>
 
     for (std::size_t i{0U}; i < N; ++i) {
         auto di = d;
-        di[i].imag = 1.0F;
+        di[i].imag1 = 1.0F;
 
-        r[i] = cost(di).imag;
+        r[i] = cost(di).imag1;
     }
 
     return r;
@@ -60,7 +60,7 @@ template <Vector V>
 constexpr auto stopping_criterion(const V& g) -> bool
 {
     // FIXME don't assume scalar type is constructible from float
-    constexpr scalar_t<V> tol{0.001F};  // NOLINT(readability-magic-numbers)
+    constexpr scalar_t<V> tol{0.0001F};  // NOLINT(readability-magic-numbers)
 
     return opt::norm(g) < tol;
 }

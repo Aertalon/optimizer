@@ -21,11 +21,11 @@ auto main() -> int
         return opt::exp(x_part * x_part) + y_part * y_part;
     };
 
-    constexpr point p{1.0F, 0.0F};
+    constexpr point p{2.0F, 0.0F};
 
     test("convopt gradient") = [&] {
         expect(constant<eq(opt::gradient(p, cost),
-                           vector{-4.0F * opt::exp(4.0F), 2.0F})>);
+                           vector{-2.0F * opt::exp(1.0F), 2.0F})>);
     };
 
     test("convopt optimize") = [&] {
