@@ -14,7 +14,7 @@ auto main() -> int
     constexpr dual x{1.0F, 2.0F, 3.0F, 0.0F};
     constexpr float tol{1e-5F};
 
-    test("dualnumbers math square") = [&x, tol] {
+    test("dualnumbers math square") = [&x] {
         expect(constant<eq(x * x,
                            dual{1.0F,
                                 2.0F * 2.0F * 1.0F,
@@ -27,19 +27,19 @@ auto main() -> int
                ge(std::exp(1.0F), opt::exp(1.0F) - tol));
 
         expect(constant<close_to(opt::exp(x),
-                                 dual{std::exp(1.0F),
-                                      2.0F * std::exp(1.0F),
-                                      3.0F * std::exp(1.0F),
-                                      6.0F * std::exp(1.0F)},
+                                 dual{opt::exp(1.0F),
+                                      2.0F * opt::exp(1.0F),
+                                      3.0F * opt::exp(1.0F),
+                                      6.0F * opt::exp(1.0F)},
                                  tol)>);
 
         constexpr dual y{1.0F, 1.0F, 1.0F, 0.0F};
         expect(constant<close_to(opt::exp(y * y),
                                  dual{
-                                     std::exp(1.0F),
-                                     2.0F * std::exp(1.0F),
-                                     2.0F * std::exp(1.0F),
-                                     (2.0F + 4.0F) * std::exp(1.0F),
+                                     opt::exp(1.0F),
+                                     2.0F * opt::exp(1.0F),
+                                     2.0F * opt::exp(1.0F),
+                                     (2.0F + 4.0F) * opt::exp(1.0F),
                                  },
                                  tol)>);
     };

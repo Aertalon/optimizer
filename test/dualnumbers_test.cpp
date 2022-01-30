@@ -38,8 +38,8 @@ auto main() -> int
         constexpr dual x{1.0F, 0.0F, 0.0F, 0.0F};
         constexpr dual y{0.0F, 1.0F, 0.0F, 0.0F};
 
-        expect(constant<eq(x * y, dual{0.0F, 1.0F})>);
-        expect(constant<eq(y * x, dual{0.0F, 1.0F})>);
+        expect(constant<eq(x * y, dual{0.0F, 1.0F, 0.0F, 0.0F})>);
+        expect(constant<eq(y * x, dual{0.0F, 1.0F, 0.0F, 0.0F})>);
     };
 
     test("dualnumbers division") = [] {

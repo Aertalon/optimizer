@@ -115,7 +115,7 @@ struct dual {
 template <class T>
 dual(T) -> dual<T>;
 template <class T>
-dual(T, T) -> dual<T>;
+dual(T, T, T, T) -> dual<T>;
 #endif
 
 // TODO(enrlov): add constraint -> dual should be built upon Arithmetic
