@@ -2,16 +2,16 @@
 
 #include "concepts.hpp"
 #include "dualnumbers.hpp"
+#include "impl/base_fn.hpp"
 
 #include <cmath>
 #include <cstddef>
 #include <type_traits>
 
 namespace opt {
+namespace detail {
 
-template <Real T>
-constexpr auto exp(T x) -> T
-{
+inline constexpr impl::base_fn exp = []<Real T>(T x) -> T {
     auto acc = T{1};
     auto power = acc;
     auto factorial = acc;
@@ -24,11 +24,9 @@ constexpr auto exp(T x) -> T
         acc += power / factorial;
     }
     return acc;
-}
+};
 
-template <Real T>
-constexpr auto cos(T x) -> T
-{
+inline constexpr impl::base_fn cos = []<Real T>(T x) -> T {
     auto acc = T{1};
     auto power = acc;
     auto factorial = acc;
@@ -41,11 +39,9 @@ constexpr auto cos(T x) -> T
         acc += (i % 2 == 0 ? T{1} : -T{1}) * power / factorial;
     }
     return acc;
-}
+};
 
-template <Real T>
-constexpr auto sin(T x) -> T
-{
+inline constexpr impl::base_fn sin = []<Real T>(T x) -> T {
     auto acc = x;
     auto power = x;
     auto factorial = T{1};
@@ -58,24 +54,28 @@ constexpr auto sin(T x) -> T
         acc += (i % 2 == 0 ? T{1} : -T{1}) * power / factorial;
     }
     return acc;
-}
+};
 
-template <Dual T>
-constexpr auto exp(const T& x) -> T
-{
-    return T{exp(x.real), x.imag * exp(x.real)};
-}
+template <std::default_initializable F, std::default_initializable G>
+struct dual_fn {
+    constexpr dual_fn(F, G) noexcept {}
 
-template <Dual T>
-constexpr auto cos(const T& x) -> T
-{
-    return T{cos(x.real), -x.imag * sin(x.real)};
-}
+    template <Dual T>
+    constexpr auto operator()(const T& x) const -> T
+    {
+        return {F{}(x.real), x.imag * G{}(x.real)};
+    }
+    template <Real T>
+    constexpr auto operator()(T x) const -> T
+    {
+        return T{F{}(x)};
+    }
+};
 
-template <Dual T>
-constexpr auto sin(const T& x) -> T
-{
-    return T{sin(x.real), x.imag * cos(x.real)};
-}
+}  // namespace detail
+
+inline constexpr detail::dual_fn exp{detail::exp, detail::exp};
+inline constexpr detail::dual_fn sin{detail::sin, detail::cos};
+inline constexpr detail::dual_fn cos{detail::cos, -detail::sin};
 
 }  // namespace opt
