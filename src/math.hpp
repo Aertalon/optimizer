@@ -3,57 +3,40 @@
 #include "concepts.hpp"
 #include "dualnumbers.hpp"
 #include "impl/base_fn.hpp"
+#include "impl/series.hpp"
 
 #include <cmath>
 #include <cstddef>
 #include <type_traits>
 
 namespace opt {
-namespace detail {
+namespace impl {
 
-inline constexpr impl::base_fn exp = []<Real T>(T x) -> T {
-    auto acc = T{1};
-    auto power = acc;
-    auto factorial = acc;
-
-    constexpr std::size_t taylor_terms{10U};
-    for (std::size_t i{1U}; i < taylor_terms; ++i) {
-        power *= x;
-        factorial *= static_cast<T>(i);
-
-        acc += power / factorial;
-    }
-    return acc;
-};
-
-inline constexpr impl::base_fn cos = []<Real T>(T x) -> T {
-    auto acc = T{1};
-    auto power = acc;
-    auto factorial = acc;
-
-    constexpr std::size_t taylor_terms{10U};
-    for (std::size_t i{1U}; i < taylor_terms; ++i) {
-        power *= x * x;
-        factorial *= static_cast<T>((2 * i - 1) * (2 * i));
-
-        acc += (i % 2 == 0 ? T{1} : -T{1}) * power / factorial;
-    }
-    return acc;
+inline constexpr base_fn exp = []<Real T>(T x) -> T {
+    return series::sum_first<10>(series::geometric{
+        1U,    //
+        T{1},  //
+        [x](auto n) { return x / T(n); }});
 };
 
 inline constexpr impl::base_fn sin = []<Real T>(T x) -> T {
-    auto acc = x;
-    auto power = x;
-    auto factorial = T{1};
+    return series::sum_first<10>(series::geometric{
+        1U,  //
+        x,   //
+        [x](auto i) {
+            const auto n = T(i);
+            return (-1) * (x * x) / (2 * n) / (2 * n + 1);
+        }});
+};
 
-    constexpr std::size_t taylor_terms{10U};
-    for (std::size_t i{1U}; i < taylor_terms; ++i) {
-        power *= x * x;
-        factorial *= static_cast<T>((2 * i) * (2 * i + 1));
-
-        acc += (i % 2 == 0 ? T{1} : -T{1}) * power / factorial;
-    }
-    return acc;
+inline constexpr impl::base_fn cos = []<Real T>(T x) -> T {
+    return series::sum_first<10>(series::geometric{
+        1U,    //
+        T{1},  //
+        [x](auto i) {
+            const auto n = T(i);
+            return (-1) * (x * x) / (2 * n - 1) / (2 * n);
+        }});
 };
 
 template <std::default_initializable F, std::default_initializable G>
@@ -72,10 +55,10 @@ struct dual_fn {
     }
 };
 
-}  // namespace detail
+}  // namespace impl
 
-inline constexpr detail::dual_fn exp{detail::exp, detail::exp};
-inline constexpr detail::dual_fn sin{detail::sin, detail::cos};
-inline constexpr detail::dual_fn cos{detail::cos, -detail::sin};
+inline constexpr impl::dual_fn exp{impl::exp, impl::exp};
+inline constexpr impl::dual_fn sin{impl::sin, impl::cos};
+inline constexpr impl::dual_fn cos{impl::cos, -impl::sin};
 
 }  // namespace opt
