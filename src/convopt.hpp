@@ -30,9 +30,9 @@ constexpr auto gradient(const P& p, F cost) -> distance_t<P>
 
     for (std::size_t i{0U}; i < N; ++i) {
         auto di = d;
-        di[i].imag1 = 1.0F;
+        di[i].e1 = 1.0F;
 
-        r[i] = cost(di).imag1;
+        r[i] = cost(di).e1;
     }
 
     return r;
@@ -59,11 +59,11 @@ constexpr auto hessian(const P& p, F cost)
     for (auto i = 0U; i < N; ++i) {
         for (auto j = 0U; j < N; ++j) {
             auto dij = d;
-            dij[i].imag1 = 1.0F;
-            dij[j].imag2 = 1.0F;
+            dij[i].e1 = 1.0F;
+            dij[j].e2 = 1.0F;
             // FIXME(enrlov): properly index matrices when available
             // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-constant-array-index)
-            h[i][j] = cost(dij).imag3;
+            h[i][j] = cost(dij).e3;
         }
     }
 
