@@ -28,6 +28,22 @@ template <class T>
 concept Negatable =
   requires (T a) { { -a  } -> std::same_as<T>; };
 
+template <class T, class U = T>
+concept CompoundAddable =
+  requires (T& a, U b) { { a += b } -> std::same_as<T&>; };
+
+template <class T, class U = T>
+concept CompoundSubtractible =
+  requires (T& a, U b) { { a -= b } -> std::same_as<T&>; };
+
+template <class T, class U = T>
+concept CompoundMultipliable =
+  requires (T& a, U b) { { a *= b } -> std::same_as<T&>; };
+
+template <class T, class U = T>
+concept CompoundDivisible =
+  requires (T& a, U b) { { a /= b } -> std::same_as<T&>; };
+
 template <class T>
 concept Arithmetic =
   std::regular<T> &&
@@ -36,6 +52,10 @@ concept Arithmetic =
   Multipliable<T> &&
   Divisible<T> &&
   Negatable<T> &&
+  CompoundAddable<T> &&
+  CompoundSubtractible<T> &&
+  CompoundMultipliable<T> &&
+  CompoundDivisible<T> &&
   requires(T a) {
     T{0};  // additive identity
     T{1};  // multiplicative identity
