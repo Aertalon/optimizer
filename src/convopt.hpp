@@ -14,27 +14,25 @@ template <Point P, Cost<P> F>
 constexpr auto gradient(const P& p, F cost) -> distance_t<P>
 {
     constexpr auto N = std::tuple_size_v<P>;
-    using T = scalar_t<P>;
 
-    const auto d = [&p]() {
-        auto d = opt::point<dual<T>, N>{};
-
-        for (std::size_t i{0U}; i < N; ++i) {
-            d[i].real = p[i];
-        }
-
-        return d;
-    }();
-
-    auto r = distance_t<P>{};
-
-    for (std::size_t i{0U}; i < N; ++i) {
-        auto di = d;
-        di[i].imag = 1;
-        r[i] = cost(di).imag;
+    const auto d = [&p]<std::size_t... Is>(std::index_sequence<Is...>)
+    {
+        return opt::point{dual{p[Is]}...};
     }
+    (std::make_index_sequence<N>{});
 
-    return r;
+    const auto di = [&d](auto n) {
+        auto tmp = d;
+        tmp[n].imag = 1;
+        return tmp;
+    };
+
+    return [&di, cost ]<std::size_t... Is>(std::index_sequence<Is...>)
+    {
+        return distance_t<P>{
+            cost(di(std::integral_constant<std::size_t, Is>{})).imag...};
+    }
+    (std::make_index_sequence<N>{});
 }
 
 template <Point P, Cost<P> F>
