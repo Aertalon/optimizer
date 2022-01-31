@@ -42,10 +42,10 @@ auto main() -> int
     test("spaces vector norm") = [] {
         constexpr vector v{2.0F, 0.0F, -1.0F};
 
-        expect(constant<norm(v) == 5._f>);
+        expect(constant<opt::norm(v) == 5._f>);
     };
 
-    test("spaces vector norm") = [] {
+    test("spaces vector and point sum") = [] {
         constexpr point<float, 3> zero{};
         constexpr point p1{1.0F, 0.0F, 0.0F};
         constexpr vector v{1.0F, 0.0F, 0.0F};

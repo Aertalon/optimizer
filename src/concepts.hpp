@@ -28,6 +28,22 @@ template <class T>
 concept Negatable =
   requires (T a) { { -a  } -> std::same_as<T>; };
 
+template <class T, class U = T>
+concept CompoundAddable =
+  requires (T& a, U b) { { a += b } -> std::same_as<T&>; };
+
+template <class T, class U = T>
+concept CompoundSubtractible =
+  requires (T& a, U b) { { a -= b } -> std::same_as<T&>; };
+
+template <class T, class U = T>
+concept CompoundMultipliable =
+  requires (T& a, U b) { { a *= b } -> std::same_as<T&>; };
+
+template <class T, class U = T>
+concept CompoundDivisible =
+  requires (T& a, U b) { { a /= b } -> std::same_as<T&>; };
+
 template <class T>
 concept Arithmetic =
   std::regular<T> &&
@@ -36,6 +52,10 @@ concept Arithmetic =
   Multipliable<T> &&
   Divisible<T> &&
   Negatable<T> &&
+  CompoundAddable<T> &&
+  CompoundSubtractible<T> &&
+  CompoundMultipliable<T> &&
+  CompoundDivisible<T> &&
   requires(T a) {
     T{0};  // additive identity
     T{1};  // multiplicative identity
@@ -99,6 +119,20 @@ concept Point =
   Addable<const U&, const T&, T> &&
   Subtractible<const T&, const T&, U> &&
   Subtractible<const T&, const U&, T>;
+
+template <Arithmetic, std::size_t>
+struct point;
+
+template <Arithmetic>
+struct dual;
+
+// TODO replace total ordering requirement with partial ordering
+template <class T, class P>
+concept Cost =
+  Point<P> &&
+  std::regular_invocable<const T&, const P&> &&
+  std::regular_invocable<const T&, const opt::point<dual<scalar_t<P>>, std::tuple_size<P>::value>&> &&
+  std::totally_ordered<std::invoke_result_t<const T&, const P&>>;
 
 // clang-format on
 

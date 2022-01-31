@@ -37,6 +37,23 @@ struct dual {
                 (x.imag * y.real - x.real * y.imag) / (y.real * y.real)};
     }
 
+    constexpr auto operator+=(const dual& x) -> dual&
+    {
+        return *this = *this + x;
+    }
+    constexpr auto operator-=(const dual& x) -> dual&
+    {
+        return *this = *this - x;
+    }
+    constexpr auto operator*=(const dual& x) -> dual&
+    {
+        return *this = *this * x;
+    }
+    constexpr auto operator/=(const dual& x) -> dual&
+    {
+        return *this = *this / x;
+    }
+
     friend auto operator<<(std::ostream& os, const dual& x) -> std::ostream&
     {
         os << "(" << x.real << ", " << x.imag << ")";
