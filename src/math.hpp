@@ -2,82 +2,75 @@
 
 #include "concepts.hpp"
 #include "dualnumbers.hpp"
+#include "impl/base_fn.hpp"
+#include "impl/series.hpp"
 
 #include <cmath>
 #include <cstddef>
 #include <type_traits>
 
 namespace opt {
+namespace impl {
 
-template <Arithmetic T>  // clang-format off
-  requires(not Dual<T>)
-constexpr auto exp(T x)  // clang-format on
-{
-    auto acc = decltype(x){1};
-    auto power = acc;
-    auto factorial = acc;
+template <std::size_t N>
+inline constexpr auto exp_ = make_base_fn_<N>([]<Real T>(T x) -> T {
+    return series::sum_first<N>(series::geometric{
+        1U,    //
+        T{1},  //
+        [x](auto n) { return x / T(n); }});
+});
 
-    constexpr std::size_t taylor_terms{10U};
-    for (std::size_t i{1U}; i < taylor_terms; ++i) {
-        power *= x;
-        factorial *= static_cast<decltype(factorial)>(i);
+template <std::size_t N>
+inline constexpr auto sin_ = make_base_fn_<N>([]<Real T>(T x) -> T {
+    return series::sum_first<N>(series::geometric{
+        1U,  //
+        x,   //
+        [x](auto i) {
+            const auto n = T(i);
+            return (-1) * (x * x) / (2 * n) / (2 * n + 1);
+        }});
+});
 
-        acc += power / factorial;
+template <std::size_t N>
+inline constexpr auto cos_ = make_base_fn_<N>([]<Real T>(T x) -> T {
+    return series::sum_first<N>(series::geometric{
+        1U,    //
+        T{1},  //
+        [x](auto i) {
+            const auto n = T(i);
+            return (-1) * (x * x) / (2 * n - 1) / (2 * n);
+        }});
+});
+
+template <std::default_initializable F, std::default_initializable G>
+struct dual_fn {
+    constexpr dual_fn(F, G) noexcept {}
+
+    template <Dual T>
+    constexpr auto operator()(const T& x) const -> T
+    {
+        return {F{}(x.real), x.imag * G{}(x.real)};
     }
-    return acc;
-}
-
-template <Arithmetic T>  // clang-format off
-  requires(not Dual<T>)
-constexpr auto cos(T x)  // clang-format on
-{
-    auto acc = decltype(x){1};
-    auto power = acc;
-    auto factorial = acc;
-
-    constexpr std::size_t taylor_terms{10U};
-    for (std::size_t i{1U}; i < taylor_terms; ++i) {
-        power *= x * x;
-        factorial *= static_cast<decltype(factorial)>((2 * i - 1) * (2 * i));
-
-        acc +=
-            (i % 2 == 0 ? decltype(x){1} : -decltype(x){1}) * power / factorial;
+    template <Real T>
+    constexpr auto operator()(T x) const -> T
+    {
+        return T{F{}(x)};
     }
-    return acc;
-}
+};
 
-template <Arithmetic T>  // clang-format off
-  requires(not Dual<T>)
-constexpr auto sin(T x)  // clang-format on
-{
-    auto acc = x;
-    auto power = x;
-    auto factorial = decltype(x){1};
+}  // namespace impl
 
-    constexpr std::size_t taylor_terms{10U};
-    for (std::size_t i{1U}; i < taylor_terms; ++i) {
-        power *= x * x;
-        factorial *= static_cast<decltype(factorial)>((2 * i) * (2 * i + 1));
+template <std::size_t N>
+inline constexpr impl::dual_fn exp_{impl::exp_<N>, impl::exp_<N>};
 
-        acc +=
-            (i % 2 == 0 ? decltype(x){1} : -decltype(x){1}) * power / factorial;
-    }
-    return acc;
-}
+template <std::size_t N>
+inline constexpr impl::dual_fn sin_{impl::sin_<N>, impl::cos_<N>};
 
-constexpr auto exp(Dual auto const& x)
-{
-    return std::remove_cvref_t<decltype(x)>{exp(x.real), x.imag * exp(x.real)};
-}
+template <std::size_t N>
+inline constexpr impl::dual_fn cos_{impl::cos_<N>, -impl::sin_<N>};
 
-constexpr auto cos(Dual auto const& x)
-{
-    return std::remove_cvref_t<decltype(x)>{cos(x.real), -x.imag * sin(x.real)};
-}
-
-constexpr auto sin(Dual auto const& x)
-{
-    return std::remove_cvref_t<decltype(x)>{sin(x.real), x.imag * cos(x.real)};
-}
+inline constexpr auto exp = exp_<10>;
+inline constexpr auto sin = sin_<10>;
+inline constexpr auto cos = cos_<10>;
 
 }  // namespace opt

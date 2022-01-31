@@ -16,6 +16,8 @@ filegroup(
         "src/concepts.hpp",
         "src/convopt.hpp",
         "src/dualnumbers.hpp",
+        "src/impl/base_fn.hpp",
+        "src/impl/series.hpp",
         "src/math.hpp",
         "src/spaces.hpp",
         "src/stdx/traits.hpp",
