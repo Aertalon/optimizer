@@ -29,7 +29,7 @@ auto main() -> int
     };
 
     test("convopt optimize") = [&] {
-        expect(constant<close_to(
+        expect(constant<opt::close_to(
                    opt::optimize(p, cost), point{3.0F, -1.0F}, 1e-3F)>);
     };
 }

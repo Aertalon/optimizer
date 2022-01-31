@@ -15,6 +15,39 @@
 namespace opt {
 
 template <class T>
+requires Point<T> || Vector<T>
+[[nodiscard]] constexpr auto
+close_to(const T& lhs, const T& rhs, scalar_t<T> tol) -> bool
+{
+    // TODO move to common location or replace with constexpr math lib
+    constexpr auto abs = [](auto x) {
+        if (x < decltype(x){}) {
+            return -x;
+        }
+
+        return x;
+    };
+
+    return
+        [&lhs, &rhs, &tol, abs ]<std::size_t... Is>(std::index_sequence<Is...>)
+    {
+        return ((abs(lhs[Is] - rhs[Is]) < tol) && ...);
+    }
+    (std::make_index_sequence<std::tuple_size_v<T>>{});
+}
+
+template <class T>
+requires Vector<T>
+[[nodiscard]] constexpr auto norm(const T& v) -> scalar_t<T>
+{
+    return [&v]<std::size_t... Is>(std::index_sequence<Is...>)
+    {
+        return ((v[Is] * v[Is]) + ...);
+    }
+    (std::make_index_sequence<std::tuple_size_v<T>>{});
+}
+
+template <class T>
 class entity {
     static_assert(stdx::dependent_false<T>,
                   "This primary template should never be instantiated.");
@@ -52,27 +85,6 @@ struct entity<derived<T, N>> {
     operator[](typename coords_type::size_type n) const& -> auto&
     {
         return data[n];
-    }
-
-    [[nodiscard]] friend constexpr auto
-    close_to(const entity& lhs, const entity& rhs, T tol) -> bool
-    {
-        // TODO move to common location or replace with constexpr math lib
-        constexpr auto abs = [](auto x) {
-            if (x < decltype(x){}) {
-                return -x;
-            }
-
-            return x;
-        };
-
-        return std::transform_reduce(
-            lhs.cbegin(),
-            lhs.end(),
-            rhs.cbegin(),
-            true,
-            std::logical_and{},
-            [abs, tol](auto x, auto y) { return abs(x - y) < tol; });
     }
 
     friend auto operator<<(std::ostream& os, const entity& p) -> std::ostream&
@@ -166,11 +178,6 @@ struct vector : entity<vector<T, N>> {
         -> vector
     {
         return v * s;
-    }
-
-    [[nodiscard]] friend constexpr auto norm(const vector& v)
-    {
-        return std::inner_product(v.cbegin(), v.cend(), v.cbegin(), T{});
     }
 };
 

@@ -62,8 +62,7 @@ constexpr auto stopping_criterion(const V& g) -> bool
     // FIXME don't assume scalar type is constructible from float
     constexpr scalar_t<V> tol{0.001F};  // NOLINT(readability-magic-numbers)
 
-    // TODO define norm generically
-    return norm(g) < tol;
+    return opt::norm(g) < tol;
 }
 
 template <Point P, Cost<P> F>
