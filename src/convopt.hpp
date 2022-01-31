@@ -66,13 +66,11 @@ constexpr auto stopping_criterion(const V& g) -> bool
 }
 
 template <Point P, Cost<P> F>
-constexpr auto optimize(P x, F c) -> P
+constexpr auto optimize(P x, F c, std::size_t max_steps = 10U) -> P
 {
     auto g{gradient(x, c)};
 
-    constexpr std::size_t max_steps{10};
-    for (std::size_t steps{0U}; not stopping_criterion(g) and steps < max_steps;
-         ++steps) {
+    while (not stopping_criterion(g) or max_steps-- != 0U) {
         x = line_search(std::move(x), -g, c);
         g = gradient(x, c);
     }
