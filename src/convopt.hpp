@@ -10,10 +10,7 @@
 
 namespace opt {
 
-// TODO(enrlov): F must be invocable with P and opt::point<dual<scalar_t<P>>>
-// and return scalar_t<...> of the input
-
-template <Point P, class F>
+template <Point P, Cost<P> F>
 constexpr auto gradient(const P& p, F cost) -> distance_t<P>
 {
     constexpr auto N = std::tuple_size_v<P>;
@@ -31,7 +28,7 @@ constexpr auto gradient(const P& p, F cost) -> distance_t<P>
 
     auto r = distance_t<P>{};
 
-    for (auto i = 0U; i < N; ++i) {
+    for (std::size_t i{0U}; i < N; ++i) {
         auto di = d;
         di[i].imag = 1.0F;
 
@@ -41,7 +38,7 @@ constexpr auto gradient(const P& p, F cost) -> distance_t<P>
     return r;
 }
 
-template <Point P, class F>
+template <Point P, Cost<P> F>
 constexpr auto line_search(P orig, distance_t<P> direction, F cost) -> P
 {
     // TODO(enrlov): Implement actual linesearch
@@ -69,7 +66,7 @@ constexpr auto stopping_criterion(const V& g) -> bool
     return norm(g) < tol;
 }
 
-template <Point P, class F>
+template <Point P, Cost<P> F>
 constexpr auto optimize(P x, F c) -> P
 {
     auto g{gradient(x, c)};
