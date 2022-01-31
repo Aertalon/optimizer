@@ -38,6 +38,12 @@ auto main() -> int
         expect(constant<eq(H[1], vector{-3.0F, 9.0F})>);
     };
 
+    const auto q{p};
+    test("convopt gradient") = [&] {
+        expect(
+            eq(opt::gradient(q, cost), vector{-2.0F * opt::exp(1.0F), 2.0F}));
+    };
+
     test("convopt optimize") = [&] {
         expect(constant<opt::close_to(
                    opt::optimize(p, cost), point{3.0F, -1.0F}, 1e-2F)>);

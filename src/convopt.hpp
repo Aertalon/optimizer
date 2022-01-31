@@ -6,35 +6,52 @@
 
 #include <algorithm>
 #include <array>
+#include <execution>
 #include <iostream>
 
 namespace opt {
+
+template <std::size_t N>
+consteval auto index_array() -> std::array<std::size_t, N>
+{
+    std::array<std::size_t, N> is{};
+
+    for (auto n : std::views::iota(std::size_t{}, N)) {
+        is[n] = n;
+    }
+
+    return is;
+}
 
 template <Point P, Cost<P> F>
 constexpr auto gradient(const P& p, F cost) -> distance_t<P>
 {
     constexpr auto N = std::tuple_size_v<P>;
-    using T = scalar_t<P>;
 
-    const auto d = [&p]() {
-        auto d = opt::point<dual<T>, N>{};
+    // parallel algorithms don't work well with views
+    constexpr auto idx = index_array<N>();
 
-        for (std::size_t i{0U}; i < N; ++i) {
-            d[i].real = p[i];
-        }
-
-        return d;
-    }();
+    auto d = opt::point<dual<scalar_t<P>>, N>{};
+    std::transform(idx.cbegin(), idx.cend(), d.begin(), [&p](auto i) {
+        return dual{p[i]};
+    });
 
     auto r = distance_t<P>{};
-
-    for (std::size_t i{0U}; i < N; ++i) {
+    auto set_ith = [&r, &d, &cost](auto i) {
         auto di = d;
-        di[i].e1 = 1.0F;
-
+        di[i].e1 = 1;
         r[i] = cost(di).e1;
-    }
+    };
 
+#ifdef __cpp_lib_execution
+    if (not std::is_constant_evaluated()) {
+        std::for_each(
+            std::execution::par_unseq, idx.cbegin(), idx.cend(), set_ith);
+        return r;
+    }
+#endif
+
+    std::for_each(idx.cbegin(), idx.cend(), set_ith);
     return r;
 }
 
