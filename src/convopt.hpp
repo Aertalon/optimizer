@@ -30,8 +30,7 @@ constexpr auto gradient(const P& p, F cost) -> distance_t<P>
 
     for (std::size_t i{0U}; i < N; ++i) {
         auto di = d;
-        di[i].imag = 1.0F;
-
+        di[i].imag = 1;
         r[i] = cost(di).imag;
     }
 
@@ -42,8 +41,10 @@ template <Point P, Cost<P> F>
 constexpr auto line_search(P orig, distance_t<P> direction, F cost) -> P
 {
     // TODO(enrlov): Implement actual linesearch
-    // FIXME don't assume scalar type is constructible from float
-    constexpr scalar_t<P> lambda{0.001F};  // NOLINT(readability-magic-numbers)
+
+    using T = scalar_t<P>;
+    constexpr auto lambda =
+        T{1} / T{1'000};  // NOLINT(readability-magic-numbers)
 
     while (true) {
         auto end = orig + lambda * direction;
@@ -59,8 +60,8 @@ constexpr auto line_search(P orig, distance_t<P> direction, F cost) -> P
 template <Vector V>
 constexpr auto stopping_criterion(const V& g) -> bool
 {
-    // FIXME don't assume scalar type is constructible from float
-    constexpr scalar_t<V> tol{0.001F};  // NOLINT(readability-magic-numbers)
+    using T = scalar_t<V>;
+    constexpr auto tol = T{1} / T{1'000};  // NOLINT(readability-magic-numbers)
 
     return opt::norm(g) < tol;
 }
