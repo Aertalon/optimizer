@@ -14,36 +14,35 @@ template <Point P, Cost<P> F>
 constexpr auto gradient(const P& p, F cost) -> distance_t<P>
 {
     constexpr auto N = std::tuple_size_v<P>;
-    using T = scalar_t<P>;
 
-    const auto d = [&p]() {
-        auto d = opt::point<dual<T>, N>{};
-
-        for (std::size_t i{0U}; i < N; ++i) {
-            d[i].real = p[i];
-        }
-
-        return d;
-    }();
-
-    auto r = distance_t<P>{};
-
-    for (std::size_t i{0U}; i < N; ++i) {
-        auto di = d;
-        di[i].imag = 1.0F;
-
-        r[i] = cost(di).imag;
+    const auto d = [&p]<std::size_t... Is>(std::index_sequence<Is...>)
+    {
+        return opt::point{dual{p[Is]}...};
     }
+    (std::make_index_sequence<N>{});
 
-    return r;
+    const auto di = [&d](auto n) {
+        auto tmp = d;
+        tmp[n].imag = 1;
+        return tmp;
+    };
+
+    return [&di, cost ]<std::size_t... Is>(std::index_sequence<Is...>)
+    {
+        return distance_t<P>{
+            cost(di(std::integral_constant<std::size_t, Is>{})).imag...};
+    }
+    (std::make_index_sequence<N>{});
 }
 
 template <Point P, Cost<P> F>
 constexpr auto line_search(P orig, distance_t<P> direction, F cost) -> P
 {
     // TODO(enrlov): Implement actual linesearch
-    // FIXME don't assume scalar type is constructible from float
-    constexpr scalar_t<P> lambda{0.001F};  // NOLINT(readability-magic-numbers)
+
+    using T = scalar_t<P>;
+    constexpr auto lambda =
+        T{1} / T{1'000};  // NOLINT(readability-magic-numbers)
 
     while (true) {
         auto end = orig + lambda * direction;
@@ -59,20 +58,18 @@ constexpr auto line_search(P orig, distance_t<P> direction, F cost) -> P
 template <Vector V>
 constexpr auto stopping_criterion(const V& g) -> bool
 {
-    // FIXME don't assume scalar type is constructible from float
-    constexpr scalar_t<V> tol{0.001F};  // NOLINT(readability-magic-numbers)
+    using T = scalar_t<V>;
+    constexpr auto tol = T{1} / T{1'000};  // NOLINT(readability-magic-numbers)
 
     return opt::norm(g) < tol;
 }
 
 template <Point P, Cost<P> F>
-constexpr auto optimize(P x, F c) -> P
+constexpr auto optimize(P x, F c, std::size_t max_steps = 10U) -> P
 {
     auto g{gradient(x, c)};
 
-    constexpr std::size_t max_steps{10};
-    for (std::size_t steps{0U}; not stopping_criterion(g) and steps < max_steps;
-         ++steps) {
+    while (not stopping_criterion(g) or max_steps-- != 0U) {
         x = line_search(std::move(x), -g, c);
         g = gradient(x, c);
     }

@@ -35,11 +35,11 @@ struct copyable_wrapper : std::optional<T> {
     }
 };
 
-template <std::regular_invocable<std::size_t> F,
-          Arithmetic R = std::invoke_result_t<const F&, std::size_t>>
+template <std::regular_invocable<std::int8_t> F,
+          Arithmetic R = std::invoke_result_t<const F&, std::int8_t>>
 struct geometric : std::ranges::view_interface<geometric<F>> {
     copyable_wrapper<F> func{};
-    std::size_t step{};
+    std::int8_t step{};
     R acc{};
 
     geometric() = default;
@@ -49,9 +49,9 @@ struct geometric : std::ranges::view_interface<geometric<F>> {
     // NOLINTNEXTLINE(bugprone-forwarding-reference-overload)
     constexpr geometric(T&& t) : func{std::forward<T>(t)}, acc{1} {}
 
-    template <std::unsigned_integral I, std::same_as<R> A, class T>
+    template <std::same_as<R> A, class T>
     requires std::same_as<F, std::remove_cvref_t<T>>
-    constexpr geometric(I n0, A init, T&& t)
+    constexpr geometric(std::int8_t n0, A init, T&& t)
         : func{std::forward<T>(t)}, step{n0}, acc{init}
     {}
 
@@ -92,13 +92,13 @@ struct geometric : std::ranges::view_interface<geometric<F>> {
 template <class F>
 geometric(F) -> geometric<std::remove_cvref_t<F>>;
 template <class F>
-geometric(std::size_t n, std::invoke_result_t<const F&, std::size_t>, F)
+geometric(std::int8_t n, std::invoke_result_t<const F&, std::int8_t>, F)
     -> geometric<std::remove_cvref_t<F>>;
 
-template <std::size_t N,
+template <std::int8_t N,
           std::ranges::input_range R,
           Arithmetic T = std::remove_cvref_t<std::ranges::range_value_t<R>>>
-constexpr auto sum_first(R&& rng, T init = {})
+requires(N > 0) constexpr auto sum_first(R&& rng, T init = {})
 {
     for (const auto& x : std::ranges::take_view{std::forward<R>(rng), N}) {
         init += x;

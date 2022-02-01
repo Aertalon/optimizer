@@ -12,6 +12,9 @@ struct dual {
     T real{};
     T imag{};
 
+    dual() = default;
+    constexpr dual(T re, T im = {}) : real{re}, imag{im} {}
+
     [[nodiscard]] friend constexpr auto operator+(const dual& x, const dual& y)
         -> dual
     {
