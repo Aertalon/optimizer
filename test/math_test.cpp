@@ -84,6 +84,12 @@ auto main() -> int
                  2.0F * 3.0F * (2.0F * std::cos(1.0F) - 4.0F * std::sin(1.0F))},
             tol));
     };
+
+    test("math sqrt") = [tol] {
+        const float result{opt::sqrt(2.0F)};
+        expect(le(result * result, 2.0F + tol) and
+               ge(result * result, 2.0F - tol));
+    };
 }
 
 // NOLINTEND(readability-magic-numbers)

@@ -1,3 +1,4 @@
+#include "src/norms.hpp"
 #include "src/spaces.hpp"
 
 #include "boost/ut.hpp"
@@ -39,12 +40,6 @@ auto main() -> int
                                                  vector<float, 3>>>);
     };
 
-    test("spaces vector norm") = [] {
-        constexpr vector v{2.0F, 0.0F, -1.0F};
-
-        expect(constant<opt::norm(v) == 5._f>);
-    };
-
     test("spaces vector and point sum") = [] {
         constexpr point<float, 3> zero{};
         constexpr point p1{1.0F, 0.0F, 0.0F};
@@ -52,6 +47,13 @@ auto main() -> int
 
         expect(constant<eq(zero + v, p1)>);
         expect(constant<eq(point<float, 3>{} + vector{1.0F, 0.0F, 0.0F}, p1)>);
+    };
+
+    test("spaces canonical vector") = [] {
+        constexpr auto actual{opt::canonical_vector<float, 3, 1>};
+        constexpr vector<float, 3> expected{0.0F, 1.0F, 0.0F};
+
+        expect(constant<eq(actual, expected)>);
     };
 }
 
