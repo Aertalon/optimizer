@@ -29,4 +29,7 @@ opt_cc_library(
     name = "optimizer",
     hdrs = [":headers"],
     visibility = ["//visibility:public"],
+    deps = [
+        "@gcem",
+    ],
 )

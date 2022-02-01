@@ -42,6 +42,13 @@ new_git_repository(
     remote = "https://github.com/boost-ext/ut/",
 )
 
+new_git_repository(
+    name = "gcem",
+    build_file = "@//:external/gcem.BUILD",
+    commit = "4fb808a8e2969bfa1e3b2161bc9b7438338a4f50",
+    remote = "https://github.com/kthohr/gcem",
+)
+
 http_archive(
     name = "rules_python",
     sha256 = "954aa89b491be4a083304a2cb838019c8b8c3720a7abb9c4cb81ac7a24230cea",

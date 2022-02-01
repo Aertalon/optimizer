@@ -2,6 +2,7 @@
 
 #include "concepts.hpp"
 #include "dualnumbers.hpp"
+#include "gcem.hpp"
 #include "impl/base_fn.hpp"
 #include "impl/series.hpp"
 
@@ -14,32 +15,17 @@ namespace impl {
 
 template <std::size_t N>
 inline constexpr auto exp_ = make_base_fn_<N>([]<Real T>(T x) -> T {
-    return series::sum_first<N>(series::geometric{
-        1U,    //
-        T{1},  //
-        [x](auto n) { return x / T(n); }});
+    return gcem::exp(x);
 });
 
 template <std::size_t N>
 inline constexpr auto sin_ = make_base_fn_<N>([]<Real T>(T x) -> T {
-    return series::sum_first<N>(series::geometric{
-        1U,  //
-        x,   //
-        [x](auto i) {
-            const auto n = T(i);
-            return (-1) * (x * x) / (2 * n) / (2 * n + 1);
-        }});
+    return gcem::sin(x);
 });
 
 template <std::size_t N>
 inline constexpr auto cos_ = make_base_fn_<N>([]<Real T>(T x) -> T {
-    return series::sum_first<N>(series::geometric{
-        1U,    //
-        T{1},  //
-        [x](auto i) {
-            const auto n = T(i);
-            return (-1) * (x * x) / (2 * n - 1) / (2 * n);
-        }});
+    return gcem::cos(x);
 });
 
 template <std::default_initializable F, std::default_initializable G>

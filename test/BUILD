@@ -8,6 +8,9 @@ opt_cc_test(
 opt_cc_test(
     name = "math",
     size = "small",
+    deps = [
+        "@gcem",
+    ],
 )
 
 opt_cc_test(

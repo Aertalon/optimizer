@@ -17,7 +17,8 @@ def opt_cc_test(name, **kwargs):
     ]
 
     if "deps" in kwargs:
-        full_deps = full_deps + kwargs.deps
+        full_deps = full_deps + kwargs["deps"]
+        kwargs.pop("deps")
 
     if "srcs" in kwargs:
         test_srcs = kwargs.srcs
