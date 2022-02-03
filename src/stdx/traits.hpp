@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cstddef>
 #include <type_traits>
 
 namespace opt ::stdx {
@@ -21,5 +22,15 @@ struct is_specialization_of<Primary<Args...>, Primary> : std::true_type {};
 template <class T, template <class...> class Primary>
 inline constexpr bool is_specialization_of_v =
     is_specialization_of<T, Primary>::value;
+
+template <std::size_t>
+struct priority_tag_t;
+template <>
+struct priority_tag_t<0> {};
+template <std::size_t N>
+struct priority_tag_t : priority_tag_t<N - 1> {};
+
+template <std::size_t N>
+inline constexpr priority_tag_t<N> priority_tag{};
 
 }  // namespace opt::stdx

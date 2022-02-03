@@ -6,6 +6,7 @@
 #include <iostream>
 
 namespace opt {
+namespace impl {
 
 template <Arithmetic T>
 struct dual {
@@ -109,6 +110,9 @@ dual(T) -> dual<T>;
 template <class T>
 dual(T, T, T, T) -> dual<T>;
 #endif
+}  // namespace impl
+
+using impl::dual;
 
 template <class T>
 using is_dual = stdx::is_specialization_of<T, dual>;
