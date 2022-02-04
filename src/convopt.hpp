@@ -8,13 +8,15 @@
 #include <array>
 #include <execution>
 #include <iostream>
+#include <utility>
 
 namespace opt {
+namespace detail {
 
-template <std::size_t N>
-consteval auto index_array() -> std::array<std::size_t, N>
+template <std::size_t N, class R = std::array<std::size_t, N>>
+[[nodiscard]] consteval auto index_array() -> R
 {
-    std::array<std::size_t, N> is{};
+    auto is = R{};
 
     for (auto n : std::views::iota(std::size_t{}, N)) {
         is[n] = n;
@@ -23,35 +25,50 @@ consteval auto index_array() -> std::array<std::size_t, N>
     return is;
 }
 
+template <Point P,
+          class R = opt::point<dual<scalar_t<P>>, std::tuple_size_v<P>>>
+[[nodiscard]] constexpr auto as_point_dual(const P& p) -> R
+{
+    if constexpr (std::is_same_v<P, R>) {
+        return p;
+    }
+
+    constexpr auto N = std::tuple_size_v<P>;
+    auto to = R{};
+
+    for (auto i : std::views::iota(std::size_t{}, N)) {
+        to[i].real = p[i];
+    }
+
+    return to;
+}
+
+}  // namespace detail
+
 template <Point P, Cost<P> F>
 constexpr auto gradient(const P& p, F cost) -> distance_t<P>
 {
     constexpr auto N = std::tuple_size_v<P>;
 
-    // parallel algorithms don't work well with views
-    constexpr auto idx = index_array<N>();
-
-    auto d = opt::point<dual<scalar_t<P>>, N>{};
-    std::transform(idx.cbegin(), idx.cend(), d.begin(), [&p](auto i) {
-        return dual{p[i]};
-    });
-
     auto r = distance_t<P>{};
-    auto set_ith = [&r, &d, &cost](auto i) {
+    auto set_ith = [&r, &cost, d = detail::as_point_dual(p)](auto i) {
         auto di = d;
         di[i].e1 = 1;
         r[i] = cost(di).e1;
     };
 
+    constexpr auto idx = detail::index_array<N>();
 #ifdef __cpp_lib_execution
     if (not std::is_constant_evaluated()) {
         std::for_each(
-            std::execution::par_unseq, idx.cbegin(), idx.cend(), set_ith);
+            std::execution::par_unseq,
+            idx.cbegin(),
+            idx.cend(),
+            std::move(set_ith));
         return r;
     }
 #endif
-
-    std::for_each(idx.cbegin(), idx.cend(), set_ith);
+    std::for_each(idx.cbegin(), idx.cend(), std::move(set_ith));
     return r;
 }
 
@@ -59,31 +76,32 @@ template <Point P, Cost<P> F>
 constexpr auto hessian(const P& p, F cost)
 {
     constexpr auto N = std::tuple_size_v<P>;
-    using T = scalar_t<P>;
-
-    const auto d = [&p]() {
-        auto d = opt::point<dual<T>, N>{};
-
-        for (std::size_t i{0U}; i < N; ++i) {
-            d[i].real = p[i];
-        }
-
-        return d;
-    }();
 
     auto h = std::array<distance_t<P>, N>{};
+    auto set_ijth = [&h, &cost, d = detail::as_point_dual(p)](auto ij) {
+        const auto i = ij / N;
+        const auto j = ij % N;
 
-    for (auto i = 0U; i < N; ++i) {
-        for (auto j = 0U; j < N; ++j) {
-            auto dij = d;
-            dij[i].e1 = 1.0F;
-            dij[j].e2 = 1.0F;
-            // FIXME(enrlov): properly index matrices when available
-            // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-constant-array-index)
-            h[i][j] = cost(dij).e3;
-        }
+        auto dij = d;
+        dij[i].e1 = 1;
+        dij[j].e2 = 1;
+        // FIXME(enrlov): properly index matrices when available
+        // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-constant-array-index)
+        h[i][j] = cost(dij).e3;
+    };
+
+    constexpr auto ij = detail::index_array<N * N>();
+#ifdef __cpp_lib_execution
+    if (not std::is_constant_evaluated()) {
+        std::for_each(
+            std::execution::par_unseq,
+            ij.cbegin(),
+            ij.cend(),
+            std::move(set_ijth));
+        return h;
     }
-
+#endif
+    std::for_each(ij.cbegin(), ij.cend(), std::move(set_ijth));
     return h;
 }
 
