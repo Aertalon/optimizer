@@ -14,27 +14,67 @@
 
 namespace opt {
 
-template <class T>
-requires Point<T> || Vector<T>
-[[nodiscard]] constexpr auto
-close_to(const T& lhs, const T& rhs, scalar_t<T> tol) -> bool
-{
-    // TODO move to common location or replace with constexpr math lib
-    constexpr auto abs = [](auto x) {
-        if (x < decltype(x){}) {
-            return -x;
-        }
-
-        return x;
-    };
-
-    return
-        [&lhs, &rhs, &tol, abs ]<std::size_t... Is>(std::index_sequence<Is...>)
+namespace detail {
+struct close_to_fn {
+  private:
+    template <class T1, class T2, class S>
+    [[nodiscard]] constexpr auto
+    impl(T1&& lhs, T2&& rhs, S&& tol, stdx::priority_tag_t<1>) const noexcept(
+        noexcept(close_to(std::forward<T1>(lhs),
+                          std::forward<T2>(rhs),
+                          std::forward<S>(tol))))
+        -> decltype(close_to(
+            std::forward<T1>(lhs), std::forward<T2>(rhs), std::forward<S>(tol)))
     {
-        return ((abs(lhs[Is] - rhs[Is]) < tol) && ...);
+        return close_to(
+            std::forward<T1>(lhs), std::forward<T2>(rhs), std::forward<S>(tol));
     }
-    (std::make_index_sequence<std::tuple_size_v<T>>{});
-}
+    template <class T>  // clang-format off
+      requires(Point<T> || Vector<T>)
+    [[nodiscard]] constexpr auto  // clang-format on
+        impl(T const& lhs,
+             T const& rhs,
+             scalar_t<T> tol,
+             stdx::priority_tag_t<0>) const -> bool
+    {
+        // TODO move to common location or replace with constexpr math lib
+        constexpr auto abs = [](auto x) {
+            if (x < decltype(x){}) {
+                return -x;
+            }
+
+            return x;
+        };
+
+        return [&lhs, &rhs, &tol,
+                abs ]<std::size_t... Is>(std::index_sequence<Is...>)
+        {
+            return ((abs(lhs[Is] - rhs[Is]) < tol) && ...);
+        }
+        (std::make_index_sequence<std::tuple_size_v<T>>{});
+    }
+
+  public:
+    template <class T1, class T2, class S>
+    [[nodiscard]] constexpr auto
+    operator()(T1&& lhs, T2&& rhs, S&& tol) const noexcept(noexcept(impl(
+        std::forward<T1>(lhs),
+        std::forward<T2>(rhs),
+        std::forward<S>(tol),
+        stdx::priority_tag<1>)))
+        -> decltype(impl(std::forward<T1>(lhs),
+                         std::forward<T2>(rhs),
+                         std::forward<S>(tol),
+                         stdx::priority_tag<1>))
+    {
+        return impl(std::forward<T1>(lhs),
+                    std::forward<T2>(rhs),
+                    std::forward<S>(tol),
+                    stdx::priority_tag<1>);
+    }
+};
+}  // namespace detail
+inline constexpr detail::close_to_fn close_to{};
 
 template <class T>
 requires Vector<T>

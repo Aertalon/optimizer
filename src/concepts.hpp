@@ -123,15 +123,18 @@ concept Point =
 template <Arithmetic, std::size_t>
 struct point;
 
+namespace impl {
 template <Arithmetic>
 struct dual;
+}
 
 // TODO replace total ordering requirement with partial ordering
 template <class T, class P>
 concept Cost =
   Point<P> &&
   std::regular_invocable<const T&, const P&> &&
-  std::regular_invocable<const T&, const opt::point<dual<scalar_t<P>>, std::tuple_size<P>::value>&> &&
+  std::regular_invocable<const T&,
+                         const opt::point<impl::dual<scalar_t<P>>, std::tuple_size<P>::value>&> &&
   std::totally_ordered<std::invoke_result_t<const T&, const P&>>;
 
 // clang-format on
