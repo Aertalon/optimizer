@@ -19,6 +19,7 @@ template <std::size_t N, class R = std::array<std::size_t, N>>
     auto is = R{};
 
     for (auto n : std::views::iota(std::size_t{}, N)) {
+        // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-constant-array-index)
         is[n] = n;
     }
 
