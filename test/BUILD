@@ -31,6 +31,11 @@ opt_cc_test(
 )
 
 opt_cc_test(
+    name = "norms",
+    size = "small",
+)
+
+opt_cc_test(
     name = "convopt",
     size = "small",
 )

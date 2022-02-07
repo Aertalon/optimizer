@@ -77,17 +77,6 @@ struct close_to_fn {
 inline constexpr detail::close_to_fn close_to{};
 
 template <class T>
-requires Vector<T>
-[[nodiscard]] constexpr auto norm(const T& v) -> scalar_t<T>
-{
-    return [&v]<std::size_t... Is>(std::index_sequence<Is...>)
-    {
-        return ((v[Is] * v[Is]) + ...);
-    }
-    (std::make_index_sequence<std::tuple_size_v<T>>{});
-}
-
-template <class T>
 class entity {
     static_assert(stdx::dependent_false<T>,
                   "This primary template should never be instantiated.");
