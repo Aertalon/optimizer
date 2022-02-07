@@ -1,6 +1,7 @@
 #pragma once
 
 #include "concepts.hpp"
+#include "math.hpp"
 #include "stdx/traits.hpp"
 
 #include <algorithm>
@@ -75,17 +76,6 @@ struct close_to_fn {
 };
 }  // namespace detail
 inline constexpr detail::close_to_fn close_to{};
-
-template <class T>
-requires Vector<T>
-[[nodiscard]] constexpr auto norm(const T& v) -> scalar_t<T>
-{
-    return [&v]<std::size_t... Is>(std::index_sequence<Is...>)
-    {
-        return ((v[Is] * v[Is]) + ...);
-    }
-    (std::make_index_sequence<std::tuple_size_v<T>>{});
-}
 
 template <class T>
 class entity {
@@ -168,6 +158,11 @@ struct entity<derived<T, N>> {
         : data{std::forward<Args>(xs)...}
     {}
 
+    explicit constexpr entity(std::initializer_list<T> list)  // clang-format on
+    {
+        std::copy(list.begin(), list.end(), data.begin());
+    }
+
     // NOLINTEND(modernize-use-equals-delete)
 };
 
@@ -180,6 +175,10 @@ struct vector : entity<vector<T, N>> {
       requires(std::same_as<T, std::remove_cvref_t<Args>> && ...)
     explicit(sizeof...(Args) == 1) constexpr vector(Args&&... args)  // clang-format on
         : entity<vector<T, N>>(std::forward<Args>(args)...)
+    {}
+
+    explicit constexpr vector(std::initializer_list<T> list)  // clang-format on
+        : entity<vector<T, N>>(std::forward<std::initializer_list<T>>(list))
     {}
 
     [[nodiscard]] friend constexpr auto operator-(const vector& v) -> vector
@@ -219,10 +218,41 @@ struct vector : entity<vector<T, N>> {
     {
         return v * s;
     }
+
+    [[nodiscard]] friend constexpr auto operator/(const vector& v, const T& s)
+        -> vector
+    {
+        return v * (T{1} / s);
+    }
 };
 
 template <class... Ts>
 vector(Ts...) -> vector<std::common_type_t<Ts...>, sizeof...(Ts)>;
+
+namespace detail {
+template <class T, std::size_t N, std::size_t I>
+requires(I < N) constexpr auto make_canonical_vector() -> vector<T, N>
+{
+    const auto impl = []<std::size_t... Is>(std::index_sequence<Is...>)
+    {
+        return vector<T, N>{{Is == I ? T{1} : T{0}}...};
+    };
+    return impl(std::make_index_sequence<N>{});
+}
+}  // namespace detail
+
+template <class T, std::size_t N, std::size_t I>
+requires(I < N) inline constexpr auto canonical_vector =
+    detail::make_canonical_vector<T, N, I>();
+
+// FIXME: handle this properly
+template <std::size_t Index, class T, std::size_t N>
+constexpr auto subvector(vector<T, N> const& v) -> vector<T, N - Index>
+{
+    vector<T, N - Index> subv{};
+    std::copy(v.begin() + Index, v.end(), subv.begin());
+    return subv;
+}
 
 /// A simple N-d point class
 template <Arithmetic T, std::size_t N>
@@ -266,6 +296,12 @@ struct point : entity<point<T, N>> {
     operator+(const vector<T, N>& v, const point& p) -> point
     {
         return p + v;
+    }
+
+    [[nodiscard]] friend constexpr auto to_vector(const point& p)
+        -> vector<T, N>
+    {
+        return p - point{};
     }
 };
 

@@ -13,6 +13,26 @@
 namespace opt {
 namespace impl {
 
+template <std::size_t M, Arithmetic T, class F>
+requires(std::totally_ordered<T>) constexpr T
+    logsearch(T const& low_init, T const& high_init, F const& pred)
+{
+    auto low{low_init};
+    auto high{high_init};
+    std::size_t counter{0};
+
+    while (counter < M) {
+        const T mid{(low + high) / (T{1} + T{1})};
+        if (pred(mid)) {
+            high = mid;
+        } else {
+            low = mid;
+        }
+        counter++;
+    }
+    return low;
+}
+
 template <std::size_t N>
 inline constexpr auto exp_ = make_base_fn_<N>([]<Real T>(T x) -> T {
     return series::sum_first<N>(series::geometric{
@@ -64,6 +84,13 @@ struct dual_fn {
     }
 };
 
+template <std::size_t N>
+inline constexpr auto sqrt_ =
+    make_base_fn_<N>([]<Real T> requires(std::totally_ordered<T>)(T x)->T {
+        const auto lower_than_sqrt = [&x](T const& y) { return x < y * y; };
+        return logsearch<N>(T{0}, x / (T{1} + T{1}) + T{1}, lower_than_sqrt);
+    });
+
 }  // namespace impl
 
 template <std::size_t N>
@@ -81,5 +108,7 @@ inline constexpr impl::dual_fn cos_{
 inline constexpr auto exp = exp_<10>;
 inline constexpr auto sin = sin_<10>;
 inline constexpr auto cos = cos_<10>;
+
+inline constexpr auto sqrt = impl::sqrt_<30>;
 
 }  // namespace opt

@@ -19,6 +19,10 @@ auto main() -> int
                (x[1] + T{1}) * (x[1] + T{1});
     };
 
+    constexpr opt::EqualityConstraint eq_constraints{
+        .A = opt::matrix<float, 1, 2>{{1.0F}, {0.0F}},
+        .b = opt::matrix<float, 1, 1>{opt::from_rows{}, {0.0F}}};
+
     constexpr auto cost_quadratic = []<opt::Point P>(const P& x) {
         using T = opt::scalar_t<P>;
         return (x[0] - T{3} * x[1]) * (x[0] - T{3} * x[1]) / T{2};
@@ -47,6 +51,12 @@ auto main() -> int
     test("convopt optimize") = [&] {
         expect(constant<opt::close_to(
                    opt::optimize(p, cost), point{3.0F, -1.0F}, 1e-2F)>);
+    };
+
+    test("convopt optimize with equality constraints") = [&] {
+        std::cout << opt::optimize(p, cost, eq_constraints) << std::endl;
+        // expect(constant<opt::close_to(
+        //            opt::optimize(p, cost, eq), point{3.0F, -1.0F}, 1e-2F)>);
     };
 }
 

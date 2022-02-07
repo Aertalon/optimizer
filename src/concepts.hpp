@@ -129,13 +129,13 @@ struct dual;
 }
 
 // TODO replace total ordering requirement with partial ordering
-template <class T, class P>
+template <class F, class P>
 concept Cost =
   Point<P> &&
-  std::regular_invocable<const T&, const P&> &&
-  std::regular_invocable<const T&,
+  std::regular_invocable<const F&, const P&> &&
+  std::regular_invocable<const F&,
                          const opt::point<impl::dual<scalar_t<P>>, std::tuple_size<P>::value>&> &&
-  std::totally_ordered<std::invoke_result_t<const T&, const P&>>;
+  std::totally_ordered<std::invoke_result_t<const F&, const P&>>;
 
 // clang-format on
 
