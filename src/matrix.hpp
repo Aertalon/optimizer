@@ -11,10 +11,13 @@ struct matrix {
     using entries_type = scalar_t<V>;
     using columns_type = V;
 
+    using row_index = typename V::coords_type::size_type;
+    using col_index = std::size_t;
+
     std::array<V, Cols> columns{};
 
-    // Special member functions defaulted
-    constexpr matrix() = default;
+    // Default ctor
+    matrix() = default;
 
     // Ctor from elements, row major
     template <class... Us>  // clang-format off
@@ -23,13 +26,13 @@ struct matrix {
             (sizeof...(Us) == (cols * rows)))
     constexpr matrix(Us&&... us)  // clang-format on
     {
-        std::size_t row{0};
-        std::size_t col{0};
+        row_index row{0};
+        col_index col{0};
         (
             [&row, &col, &the_columns = columns](auto&& elem) {
                 // FIXME use index sequences
                 // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-constant-array-index)
-                the_columns[col][row] = elem;
+                the_columns[col][row] = std::forward<decltype(elem)>(elem);
                 col = (col == cols - 1) ? 0 : col + 1;
                 row = (col == 0) ? row + 1 : row;
             }(std::forward<Us>(us)),
@@ -71,6 +74,62 @@ struct matrix {
     [[nodiscard]] constexpr auto cend() const& noexcept
     {
         return columns.cend();
+    }
+
+    [[nodiscard]] constexpr auto operator[](col_index n) & -> auto&
+    {
+        return columns[n];
+    }
+    [[nodiscard]] constexpr auto operator[](col_index n) const& -> auto&
+    {
+        return columns[n];
+    }
+
+    [[nodiscard]] constexpr auto
+    operator[](std::pair<row_index, col_index> indices) & -> auto&
+    {
+        // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-constant-array-index)
+        return columns[indices.second][indices.first];
+    }
+
+    [[nodiscard]] constexpr auto
+    operator[](std::pair<row_index, col_index> indices) const& -> auto&
+    {
+        // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-constant-array-index)
+        return columns[indices.second][indices.first];
+    }
+
+    template <row_index R, col_index C>
+    [[nodiscard]] constexpr auto get() & -> auto&
+    {
+        return (std::get<C>(columns)).template get<R>();
+    }
+
+    template <row_index R, col_index C>
+    [[nodiscard]] constexpr auto get() const& -> auto&
+    {
+        return (std::get<C>(columns)).template get<R>();
+    }
+
+    friend auto operator<<(std::ostream& os, const matrix& p) -> std::ostream&
+    {
+        os << "[";
+
+        // TODO create a matrix view that traverses the matrix by
+        // rows
+        for (row_index r{0}; r < matrix::rows; ++r) {
+            if (r > 0) {
+                os << " ";
+            }
+            os << p[{r, 0}];
+            for (col_index c{1}; c < matrix::cols; ++c) {
+                os << ", " << p[{r, c}];
+            }
+            os << ";" << std::endl;
+        }
+        os << "]";
+
+        return os;
     }
 
     [[nodiscard]] friend constexpr auto
