@@ -129,6 +129,18 @@ struct entity<derived<T, N>> {
         return data[n];
     }
 
+    template <typename coords_type::size_type Idx>
+    [[nodiscard]] constexpr auto get() & -> auto&
+    {
+        return std::get<Idx>(data);
+    }
+
+    template <typename coords_type::size_type Idx>
+    [[nodiscard]] constexpr auto get() const& -> auto&
+    {
+        return std::get<Idx>(data);
+    }
+
     friend auto operator<<(std::ostream& os, const entity& p) -> std::ostream&
     {
         os << "(";
