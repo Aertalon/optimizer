@@ -78,10 +78,12 @@ struct matrix {
 
     [[nodiscard]] constexpr auto operator[](col_index n) & -> auto&
     {
+        // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-constant-array-index)
         return columns[n];
     }
     [[nodiscard]] constexpr auto operator[](col_index n) const& -> auto&
     {
+        // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-constant-array-index)
         return columns[n];
     }
 
@@ -134,6 +136,62 @@ struct matrix {
 
     [[nodiscard]] friend constexpr auto
     operator==(const matrix& lhs, const matrix& rhs) -> bool = default;
+
+    template <Vector W, std::size_t OtherCols>
+    requires(W::size == Cols) [[nodiscard]] friend constexpr auto
+    operator*(const matrix<V, Cols>& m0, const matrix<W, OtherCols>& m1)
+        -> matrix<V, OtherCols>
+    {
+        matrix<V, OtherCols> m2{};
+        std::transform(
+            m1.begin(), m1.end(), m2.begin(), [&m0](const W& m1_column) {
+                return m0 * m1_column;
+            });
+        return m2;
+    }
+
+    template <Vector W>
+    requires(W::size == Cols) [[nodiscard]] friend constexpr auto
+    operator*(const matrix<V, Cols>& m0, const W& v1) -> V
+    {
+        return std::transform_reduce(
+            m0.begin(),
+            m0.end(),
+            v1.begin(),
+            V{},
+            std::plus<>{},
+            [](const V& m0_column, const scalar_t<V>& s) {
+                return s * m0_column;
+            });
+    }
+
+    [[nodiscard]] friend constexpr auto
+    operator+(const matrix<V, Cols>& m0, const matrix<V, Cols>& m1)
+        -> matrix<V, Cols>
+    {
+        matrix<V, Cols> m2{};
+        std::transform(
+            m0.begin(),
+            m0.end(),
+            m1.begin(),
+            m2.begin(),
+            [](const V& m0_col, const V& m1_col) { return m0_col + m1_col; });
+        return m2;
+    }
+
+    [[nodiscard]] friend constexpr auto
+    operator-(const matrix<V, Cols>& m0, const matrix<V, Cols>& m1)
+        -> matrix<V, Cols>
+    {
+        matrix<V, Cols> m2{};
+        std::transform(
+            m0.begin(),
+            m0.end(),
+            m1.begin(),
+            m2.begin(),
+            [](const V& m0_col, const V& m1_col) { return m0_col - m1_col; });
+        return m2;
+    }
 };
 
 }  // namespace opt
