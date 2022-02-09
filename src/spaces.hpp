@@ -102,6 +102,7 @@ struct entity<derived<T, N>> {
 
     using entries_types = T;
     using coords_type = std::array<T, N>;
+    static constexpr std::size_t size = N;
 
     coords_type data{};
 
