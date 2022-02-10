@@ -15,6 +15,8 @@ struct matrix {
     using row_index = typename V::coords_type::size_type;
     using col_index = std::size_t;
 
+    static constexpr bool is_square{V::size == Cols};
+
     std::array<V, Cols> columns{};
 
     // Special member functions defaulted
@@ -194,24 +196,5 @@ struct matrix {
         return m2;
     }
 };
-
-namespace detail {
-
-template <Vector V>
-constexpr auto make_identity() -> matrix<V, V::size>
-{
-    const auto impl = []<std::size_t... Is>(std::index_sequence<Is...>)
-    {
-        return matrix<V, V::size>{canonical_vector<V, Is>...};
-    };
-
-    return impl(std::make_index_sequence<V::size>{});
-}
-
-}  // namespace detail
-
-// Replace with template<Matrix M> (M square) when the concept is available
-template <Vector V>
-inline constexpr auto identity = detail::make_identity<V>();
 
 }  // namespace opt
