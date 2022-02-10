@@ -21,6 +21,7 @@ filegroup(
         "src/math.hpp",
         "src/matrix.hpp",
         "src/spaces.hpp",
+        "src/spaces_ops.hpp",
         "src/stdx/traits.hpp",
     ],
     visibility = ["@mcss//:__pkg__"],
