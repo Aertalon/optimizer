@@ -20,6 +20,7 @@ filegroup(
         "src/impl/series.hpp",
         "src/math.hpp",
         "src/matrix.hpp",
+        "src/matrix_ops.hpp",
         "src/spaces.hpp",
         "src/spaces_ops.hpp",
         "src/stdx/traits.hpp",
