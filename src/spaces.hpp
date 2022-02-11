@@ -248,6 +248,14 @@ struct vector : entity<vector<T, N>> {
 template <class... Ts>
 vector(Ts...) -> vector<std::common_type_t<Ts...>, sizeof...(Ts)>;
 
+template <class, std::size_t>
+struct extend_to {};
+
+template <Arithmetic T, std::size_t N, std::size_t NewN>
+struct extend_to<vector<T, N>, NewN> {
+    using type = vector<T, NewN>;
+};
+
 /// A simple N-d point class
 template <Arithmetic T, std::size_t N>
 struct point : entity<point<T, N>> {
