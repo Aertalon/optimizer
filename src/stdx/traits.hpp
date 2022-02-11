@@ -33,4 +33,9 @@ struct priority_tag_t : priority_tag_t<N - 1> {};
 template <std::size_t N>
 inline constexpr priority_tag_t<N> priority_tag{};
 
+template <class T, class U>
+struct specialize_same_template : std::is_same<T, U> {};
+template <template <class...> typename Base, class... Ts, class... Us>
+struct specialize_same_template<Base<Ts...>, Base<Us...>> : std::true_type {};
+
 }  // namespace opt::stdx
