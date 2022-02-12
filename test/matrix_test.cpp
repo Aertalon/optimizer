@@ -111,6 +111,21 @@ auto main() -> int
         // clang-format on
         expect(constant<eq(m0 * m1, expected)>);
     };
+
+    test("matrix transpose") = [] {
+        // clang-format off
+        constexpr mat<float, 3, 2> m{
+            1.0F, -1.0F,
+            2.0F, -2.0F,
+            0.0F, 0.0F};
+
+        constexpr mat<float, 2, 3> mt{
+            1.0F, 2.0F, 0.0F,
+            -1.0F, -2.0F, 0.0F};
+        // clang-format on
+
+        expect(constant<eq(m.transpose(), mt)>);
+    };
 }
 
 // NOLINTEND(readability-magic-numbers)

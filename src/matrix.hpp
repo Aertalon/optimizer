@@ -15,6 +15,12 @@ struct matrix {
     using row_index = typename V::coords_type::size_type;
     using col_index = std::size_t;
 
+    template <row_index... Rs>
+    using row_seq = std::integer_sequence<row_index, Rs...>;
+
+    template <row_index... Rs>
+    using col_seq = std::integer_sequence<col_index, Rs...>;
+
     static constexpr bool is_square{V::size == Cols};
 
     std::array<V, Cols> columns{};
@@ -194,6 +200,31 @@ struct matrix {
             m2.begin(),
             [](const V& m0_col, const V& m1_col) { return m0_col - m1_col; });
         return m2;
+    }
+
+    [[nodiscard]] constexpr auto transpose() const
+        -> matrix<typename extend_to<V, cols>::type, rows>
+    {
+
+        return [this]() {
+            matrix<typename extend_to<V, cols>::type, rows> t{};
+            // Cycle over rows
+            [ this, &t ]<row_index... Rs>(row_seq<Rs...>)
+            {
+                (
+                    // Cycle over columns
+                    [ this, &t ]<std::size_t Ras, col_index... Cs>(
+                        col_seq<Cs...>, row_seq<Ras>) {
+                        ((t.template get<Cs, Ras>() =
+                              (*this).template get<Ras, Cs>()),
+                         ...);
+                    }(std::make_integer_sequence<col_index, cols>{},
+                      row_seq<Rs>{}),
+                    ...);
+            }
+            (std::make_integer_sequence<row_index, rows>{});
+            return t;
+        }();
     }
 };
 
