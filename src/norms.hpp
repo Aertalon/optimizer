@@ -1,10 +1,13 @@
 #pragma once
 
 #include "math.hpp"
+#include "matrix.hpp"
+#include "matrix_ops.hpp"
 #include "spaces.hpp"
 
 namespace opt {
 
+struct Frobenius {};
 struct L2 {};
 
 namespace detail {
@@ -19,6 +22,14 @@ struct norm_fn {
         return sqrt([&v]<std::size_t... Is>(std::index_sequence<Is...>) {
             return ((v[Is] * v[Is]) + ...);
         }(std::make_index_sequence<std::tuple_size_v<V>>{}));
+    }
+
+    template <Vector V, std::size_t Cols>
+    requires(std::is_same<NormType, Frobenius>::value)
+        [[nodiscard]] constexpr auto
+        operator()(matrix<V, Cols> const& m) const -> scalar_t<V>
+    {
+        return sqrt(trace(m * m.transpose()));
     }
 };
 }  // namespace detail
