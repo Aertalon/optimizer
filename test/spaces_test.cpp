@@ -1,3 +1,4 @@
+#include "src/norms.hpp"
 #include "src/spaces.hpp"
 
 #include "boost/ut.hpp"
@@ -37,12 +38,6 @@ auto main() -> int
         expect(
             constant<not std::is_constructible_v<opt::entity<vector<float, 3>>,
                                                  vector<float, 3>>>);
-    };
-
-    test("spaces vector norm") = [] {
-        constexpr vector v{2.0F, 0.0F, -1.0F};
-
-        expect(constant<opt::norm(v) == 5._f>);
     };
 
     test("spaces vector and point sum") = [] {

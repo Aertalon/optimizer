@@ -2,6 +2,7 @@
 
 #include "src/concepts.hpp"
 #include "src/dualnumbers.hpp"
+#include "src/norms.hpp"
 #include "src/spaces.hpp"
 
 #include <algorithm>
@@ -130,7 +131,7 @@ constexpr auto stopping_criterion(const V& g) -> bool
     // FIXME don't assume scalar type is constructible from float
     constexpr scalar_t<V> tol{0.0001F};  // NOLINT(readability-magic-numbers)
 
-    return opt::norm(g) < tol;
+    return opt::norm<opt::L2>(g) < tol;
 }
 
 template <Point P, Cost<P> F>
