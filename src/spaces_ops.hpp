@@ -23,4 +23,21 @@ template <Vector V, std::size_t I>
     requires(I < V::size)
 inline constexpr auto canonical_vector = detail::make_canonical_vector<V, I>();
 
+template <std::size_t... Ns>
+struct subvector_fn {
+
+    template <Vector V>
+        requires(std::is_convertible_v<typename V::index_type, std::size_t> &&
+                 // NOLINTNEXTLINE(misc-redundant-expression)
+                 ((Ns < V::size) && ...))
+    constexpr auto operator()(V const& v) const -> extend_to_t<V, sizeof...(Ns)>
+    {
+        using subvector_type = extend_to_t<V, sizeof...(Ns)>;
+        return subvector_type{v.template get<Ns>()...};
+    }
+};
+
+template <std::size_t... Ns>
+inline constexpr auto subvector = subvector_fn<Ns...>{};
+
 }  // namespace opt

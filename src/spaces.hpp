@@ -90,6 +90,8 @@ struct entity<derived<T, N>> {
 
     using entries_types = T;
     using coords_type = std::array<T, N>;
+    using index_type = std::size_t;
+
     static constexpr std::size_t size = N;
 
     coords_type data{};
@@ -246,6 +248,9 @@ template <Arithmetic T, std::size_t N, std::size_t NewN>
 struct extend_to<vector<T, N>, NewN> {
     using type = vector<T, NewN>;
 };
+
+template <Vector V, std::size_t NewN>
+using extend_to_t = typename extend_to<V, NewN>::type;
 
 /// A simple N-d point class
 template <Arithmetic T, std::size_t N>

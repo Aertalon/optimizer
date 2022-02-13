@@ -68,4 +68,34 @@ constexpr auto diagonal(matrix<V, Cols> const& m0,
     return diagm;
 }
 
+template <class SelRs, class SelCs>
+struct submatrix_fn {
+
+    static constexpr auto num_rows{SelRs::size()};
+    static constexpr auto num_cols{SelCs::size()};
+
+    template <Vector V, std::size_t Cols>
+    constexpr auto operator()(matrix<V, Cols> const& m) const
+        -> matrix<extend_to_t<V, num_rows>, num_cols>
+    {
+        matrix<extend_to_t<V, num_rows>, num_cols> subm{};
+
+        using col_index_type = typename matrix<V, Cols>::col_index_type;
+        using row_index_type = typename matrix<V, Cols>::row_index_type;
+
+        [&subm, &m ]<col_index_type... Cs, row_index_type... Rs>(
+            typename matrix<V, Cols>::template col_sequence<Cs...>,
+            typename matrix<V, Cols>::template row_sequence<Rs...>)
+        {
+            col_index_type idx{};
+            ((subm[idx++] = subvector<Rs...>(m[Cs])), ...);
+        }
+        (SelCs{}, SelRs{});
+        return subm;
+    }
+};
+
+template <class SelRs, class SelCs>
+inline constexpr auto submatrix = submatrix_fn<SelRs, SelCs>{};
+
 }  // namespace opt
