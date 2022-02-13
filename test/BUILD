@@ -39,3 +39,8 @@ opt_cc_test(
     name = "convopt",
     size = "small",
 )
+
+opt_cc_test(
+    name = "stdx_traits",
+    size = "small",
+)

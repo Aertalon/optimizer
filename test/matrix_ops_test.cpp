@@ -75,6 +75,25 @@ auto main() -> int
         expect(constant<eq(m0, expected_m0)>);
         expect(constant<eq(m0, mat<float, 1, 2>{1.0F, 0.0F})>);
     };
+
+    test("matrix lower submatrix") = [] {
+        using mat23 = mat<float, 2, 3>;
+        constexpr mat23 m{
+            // clang-format off
+            1.0F, 2.0F, 0.0F,
+            -1.0F, -2.0F, 0.0F};
+        // clang-format on
+
+        using selected_rows =
+            opt::stdx::bounded_integer_sequence<mat23::row_index_type, 1U, 2U>;
+        using selected_cols =
+            opt::stdx::bounded_integer_sequence<mat23::col_index_type, 1U, 3U>;
+
+        constexpr auto m0{opt::submatrix<selected_rows, selected_cols>(m)};
+        constexpr mat<float, 1, 2> expected_m0{-2.0F, 0.0F};
+        expect(constant<eq(m0, expected_m0)>);
+        expect(constant<eq(m0, mat<float, 1, 2>{-2.0F, 0.0F})>);
+    };
 }
 
 // NOLINTEND(readability-magic-numbers)
