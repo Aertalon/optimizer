@@ -2,6 +2,7 @@
 
 #include <cstddef>
 #include <type_traits>
+#include <utility>
 
 namespace opt ::stdx {
 
@@ -32,5 +33,25 @@ struct priority_tag_t : priority_tag_t<N - 1> {};
 
 template <std::size_t N>
 inline constexpr priority_tag_t<N> priority_tag{};
+
+template <class T, class U>
+struct specialize_same_template : std::is_same<T, U> {};
+template <template <class...> typename Base, class... Ts, class... Us>
+struct specialize_same_template<Base<Ts...>, Base<Us...>> : std::true_type {};
+
+template <class T, T, class>
+struct offset_sequence {};
+
+template <class T, T Offset, T... Values>
+struct offset_sequence<T, Offset, std::integer_sequence<T, Values...>> {
+    using type = std::integer_sequence<T, Offset + Values...>;
+};
+
+template <class T, T Low, T High>
+    requires(std::is_integral_v<T>)
+using bounded_integer_sequence =
+    typename offset_sequence<T,
+                             Low,
+                             std::make_integer_sequence<T, High - Low>>::type;
 
 }  // namespace opt::stdx
