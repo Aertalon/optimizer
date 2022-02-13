@@ -1,3 +1,4 @@
+#include "src/matrix_factorizations.hpp"
 #include "src/matrix_ops.hpp"
 
 #include "boost/ut.hpp"
@@ -93,6 +94,47 @@ auto main() -> int
         constexpr mat<float, 1, 2> expected_m0{-2.0F, 0.0F};
         expect(constant<eq(m0, expected_m0)>);
         expect(constant<eq(m0, mat<float, 1, 2>{-2.0F, 0.0F})>);
+    };
+
+    test("matrix qr factorization square") = [] {
+        constexpr mat<float, 3, 3> m{
+            // clang-format off
+            12.0F, -51.0F, 4.0F,
+            6.0F, 167.0F, -68.0F,
+            -4.0F, 24.0F, -41.0F};
+        // clang-format on
+
+        constexpr auto qr{opt::compute_QR(m)};
+
+        constexpr auto check_on_q{
+            (qr.Q) * (qr.Q).transpose() - opt::identity<vec>};
+        constexpr auto check_on_q_and_r{(qr.Q) * (qr.R) - m};
+
+        // FIXME: these numerical bounds are bad. Improve!
+        expect(constant<le(opt::norm<opt::Frobenius>(check_on_q), 1e-4F)>);
+        expect(
+            constant<le(opt::norm<opt::Frobenius>(check_on_q_and_r), 1e-3F)>);
+    };
+
+    test("matrix qr factorization rectangular") = [] {
+        constexpr mat<float, 4, 3> m{
+            // clang-format off
+            12.0F, -51.0F, 4.0F,
+            6.0F, 167.0F, -68.0F,
+            -4.0F, 24.0F, -41.0F,
+            -1.0F, 2.0F, 1.0F};
+        // clang-format on
+
+        constexpr auto qr{opt::compute_QR(m)};
+
+        constexpr auto check_on_q{
+            (qr.Q) * (qr.Q).transpose() - opt::identity<vector<float, 4>>};
+        constexpr auto check_on_q_and_r{(qr.Q) * (qr.R) - m};
+
+        // FIXME: these numerical bounds are bad. Improve!
+        expect(constant<le(opt::norm<opt::Frobenius>(check_on_q), 1e-4F)>);
+        expect(
+            constant<le(opt::norm<opt::Frobenius>(check_on_q_and_r), 1e-3F)>);
     };
 }
 

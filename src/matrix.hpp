@@ -194,6 +194,26 @@ struct matrix {
             });
     }
 
+    template <class S>
+        requires(std::is_convertible_v<S, entries_type>) [
+                [nodiscard]] friend constexpr auto
+        operator*(const S& v, const matrix<V, Cols>& m) -> matrix<V, Cols>
+    {
+        matrix<V, Cols> res{m};
+        for (auto& col : res) {
+            col *= v;
+        }
+        return res;
+    }
+
+    template <class S>
+        requires(std::is_convertible_v<S, entries_type>) [
+                [nodiscard]] friend constexpr auto
+        operator*(const matrix<V, Cols>& m, const S& v) -> matrix<V, Cols>
+    {
+        return v * m;
+    }
+
     [[nodiscard]] friend constexpr auto
     operator+(const matrix<V, Cols>& m0, const matrix<V, Cols>& m1)
         -> matrix<V, Cols>

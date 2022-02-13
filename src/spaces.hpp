@@ -224,10 +224,8 @@ struct vector : entity<vector<T, N>> {
     [[nodiscard]] friend constexpr auto operator*(const vector& v, const T& s)
         -> vector
     {
-        auto r = vector{};
-        std::transform(v.cbegin(), v.cend(), r.begin(), [s](auto x) {
-            return s * x;
-        });
+        auto r = vector{v};
+        r *= s;
         return r;
     }
 
@@ -235,6 +233,15 @@ struct vector : entity<vector<T, N>> {
         -> vector
     {
         return v * s;
+    }
+
+    constexpr auto operator*=(const T& s) -> vector&
+    {
+        std::transform(
+            (*this).cbegin(), (*this).cend(), (*this).begin(), [s](auto x) {
+                return s * x;
+            });
+        return *this;
     }
 };
 

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "matrix.hpp"
+#include "norms.hpp"
 
 namespace opt {
 
