@@ -124,6 +124,7 @@ template <class T>
 concept Dual = is_dual_v<T>;
 
 template <class T>
-concept Real = Arithmetic<T> && not Dual<T>;
+concept Real = Arithmetic<T> && not
+Dual<T>;
 
 }  // namespace opt

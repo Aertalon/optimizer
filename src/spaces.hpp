@@ -77,17 +77,6 @@ struct close_to_fn {
 inline constexpr detail::close_to_fn close_to{};
 
 template <class T>
-requires Vector<T>
-[[nodiscard]] constexpr auto norm(const T& v) -> scalar_t<T>
-{
-    return [&v]<std::size_t... Is>(std::index_sequence<Is...>)
-    {
-        return ((v[Is] * v[Is]) + ...);
-    }
-    (std::make_index_sequence<std::tuple_size_v<T>>{});
-}
-
-template <class T>
 class entity {
     static_assert(stdx::dependent_false<T>,
                   "This primary template should never be instantiated.");
@@ -98,7 +87,12 @@ template <Arithmetic T,
           template <class, std::size_t>
           class derived>
 struct entity<derived<T, N>> {
+
+    using entries_types = T;
     using coords_type = std::array<T, N>;
+    using index_type = std::size_t;
+
+    static constexpr std::size_t size = N;
 
     coords_type data{};
 
@@ -125,6 +119,20 @@ struct entity<derived<T, N>> {
     operator[](typename coords_type::size_type n) const& -> auto&
     {
         return data[n];
+    }
+
+    template <typename coords_type::size_type Idx>
+        requires(Idx < N) [
+                [nodiscard]] constexpr auto get() & -> auto&
+    {
+        return std::get<Idx>(data);
+    }
+
+    template <typename coords_type::size_type Idx>
+        requires(Idx < N) [
+                [nodiscard]] constexpr auto get() const& -> auto&
+    {
+        return std::get<Idx>(data);
     }
 
     friend auto operator<<(std::ostream& os, const entity& p) -> std::ostream&
@@ -168,6 +176,11 @@ struct entity<derived<T, N>> {
         : data{std::forward<Args>(xs)...}
     {}
 
+    explicit constexpr entity(std::initializer_list<T> list)  // clang-format on
+    {
+        std::copy(list.begin(), list.end(), data.begin());
+    }
+
     // NOLINTEND(modernize-use-equals-delete)
 };
 
@@ -180,6 +193,10 @@ struct vector : entity<vector<T, N>> {
       requires(std::same_as<T, std::remove_cvref_t<Args>> && ...)
     explicit(sizeof...(Args) == 1) constexpr vector(Args&&... args)  // clang-format on
         : entity<vector<T, N>>(std::forward<Args>(args)...)
+    {}
+
+    explicit constexpr vector(std::initializer_list<T> list)  // clang-format on
+        : entity<vector<T, N>>(std::forward<std::initializer_list<T>>(list))
     {}
 
     [[nodiscard]] friend constexpr auto operator-(const vector& v) -> vector
@@ -223,6 +240,17 @@ struct vector : entity<vector<T, N>> {
 
 template <class... Ts>
 vector(Ts...) -> vector<std::common_type_t<Ts...>, sizeof...(Ts)>;
+
+template <class, std::size_t>
+struct extend_to {};
+
+template <Arithmetic T, std::size_t N, std::size_t NewN>
+struct extend_to<vector<T, N>, NewN> {
+    using type = vector<T, NewN>;
+};
+
+template <Vector V, std::size_t NewN>
+using extend_to_t = typename extend_to<V, NewN>::type;
 
 /// A simple N-d point class
 template <Arithmetic T, std::size_t N>
