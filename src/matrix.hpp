@@ -5,6 +5,18 @@
 
 namespace opt {
 
+template <class T, T... Values>
+struct sequence {};
+template <class T, std::size_t N>
+consteval auto make_sequence_of()
+{
+    return []<std::size_t... Is>(std::index_sequence<Is...>)
+    {
+        return sequence<T, T{Is}...>{};
+    }
+    (std::make_index_sequence<N>{});
+}
+
 template <Vector V, std::size_t Cols>
 struct matrix {
     static constexpr std::size_t rows = std::tuple_size<V>::value;
@@ -12,14 +24,25 @@ struct matrix {
     using entries_type = scalar_t<V>;
     using columns_type = V;
 
-    using row_index = typename V::coords_type::size_type;
-    using col_index = std::size_t;
+    using row_index_type = typename columns_type::coords_type::size_type;
+    using col_index_type = std::size_t;
+
+    struct row_index {
+        row_index_type value;
+    };
+    struct col_index {
+        col_index_type value;
+    };
 
     template <row_index... Rs>
-    using row_seq = std::integer_sequence<row_index, Rs...>;
+    using row_sequence = sequence<row_index, Rs...>;
+    template <col_index... Rs>
+    using col_sequence = sequence<col_index, Rs...>;
 
-    template <row_index... Rs>
-    using col_seq = std::integer_sequence<col_index, Rs...>;
+    struct entry {
+        row_index_type row;
+        col_index_type col;
+    };
 
     static constexpr bool is_square{V::size == Cols};
 
@@ -35,15 +58,18 @@ struct matrix {
             (sizeof...(Us) == (cols * rows)))
     constexpr matrix(Us&&... us)  // clang-format on
     {
-        row_index row{0};
-        col_index col{0};
+        row_index_type row{0};
+        col_index_type col{0};
         (
             [&row, &col, &the_columns = columns](auto&& elem) {
                 // FIXME use index sequences
                 // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-constant-array-index)
                 the_columns[col][row] = elem;
-                col = (col == cols - 1) ? 0 : col + 1;
-                row = (col == 0) ? row + 1 : row;
+                col = (col == cols - col_index_type{1}) ?
+                          col_index_type{0} :
+                          col + col_index_type{1};
+                row =
+                    (col == col_index_type{0}) ? row + row_index_type{1} : row;
             }(std::forward<Us>(us)),
             ...);
     }
@@ -96,27 +122,26 @@ struct matrix {
         return columns[n];
     }
 
-    [[nodiscard]] constexpr auto
-    operator[](std::pair<row_index, col_index> indices) & -> auto&
+    [[nodiscard]] constexpr auto operator[](entry const& indices) & -> auto&
     {
         // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-constant-array-index)
-        return columns[indices.second][indices.first];
+        return columns[indices.col][indices.row];
     }
 
     [[nodiscard]] constexpr auto
-    operator[](std::pair<row_index, col_index> indices) const& -> auto&
+    operator[](entry const& indices) const& -> auto&
     {
         // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-constant-array-index)
-        return columns[indices.second][indices.first];
+        return columns[indices.col][indices.row];
     }
 
-    template <row_index R, col_index C>
+    template <row_index_type R, col_index_type C>
     [[nodiscard]] constexpr auto get() & -> auto&
     {
         return (std::get<C>(columns)).template get<R>();
     }
 
-    template <row_index R, col_index C>
+    template <row_index_type R, col_index_type C>
     [[nodiscard]] constexpr auto get() const& -> auto&
     {
         return (std::get<C>(columns)).template get<R>();
@@ -147,9 +172,10 @@ struct matrix {
     operator==(const matrix& lhs, const matrix& rhs) -> bool = default;
 
     template <Vector W, std::size_t OtherCols>
-    requires(W::size == Cols) [[nodiscard]] friend constexpr auto
-    operator*(const matrix<V, Cols>& m0, const matrix<W, OtherCols>& m1)
-        -> matrix<V, OtherCols>
+        requires(W::size == Cols) [
+                [nodiscard]] friend constexpr auto
+        operator*(const matrix<V, Cols>& m0, const matrix<W, OtherCols>& m1)
+            -> matrix<V, OtherCols>
     {
         matrix<V, OtherCols> m2{};
         std::transform(
@@ -160,8 +186,9 @@ struct matrix {
     }
 
     template <Vector W>
-    requires(W::size == Cols) [[nodiscard]] friend constexpr auto
-    operator*(const matrix<V, Cols>& m0, const W& v1) -> V
+        requires(W::size == Cols) [
+                [nodiscard]] friend constexpr auto
+        operator*(const matrix<V, Cols>& m0, const W& v1) -> V
     {
         return std::transform_reduce(
             m0.begin(),
@@ -205,24 +232,23 @@ struct matrix {
     [[nodiscard]] constexpr auto transpose() const
         -> matrix<typename extend_to<V, cols>::type, rows>
     {
-
-        return [this]() {
+        return [&self = *this]() {
             matrix<typename extend_to<V, cols>::type, rows> t{};
-            // Cycle over rows
-            [ this, &t ]<row_index... Rs>(row_seq<Rs...>)
+            [&self, &t ]<row_index... Rs>(row_sequence<Rs...>)
             {
+                // Cycle over rows
                 (
-                    // Cycle over columns
-                    [ this, &t ]<std::size_t Ras, col_index... Cs>(
-                        col_seq<Cs...>, row_seq<Ras>) {
-                        ((t.template get<Cs, Ras>() =
-                              (*this).template get<Ras, Cs>()),
+                    [&self, &t ]<row_index R, col_index... Cs>(
+                        // Given row R, cycle over columns
+                        col_sequence<Cs...>,
+                        row_sequence<R>) {
+                        ((t.template get<Cs.value, R.value>() =
+                              self.template get<R.value, Cs.value>()),
                          ...);
-                    }(std::make_integer_sequence<col_index, cols>{},
-                      row_seq<Rs>{}),
+                    }(make_sequence_of<col_index, cols>(), row_sequence<Rs>{}),
                     ...);
             }
-            (std::make_integer_sequence<row_index, rows>{});
+            (make_sequence_of<row_index, rows>());
             return t;
         }();
     }

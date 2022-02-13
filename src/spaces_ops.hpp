@@ -5,7 +5,8 @@
 namespace opt {
 namespace detail {
 template <Vector V, std::size_t I>
-requires(I < V::size) constexpr auto make_canonical_vector() -> V
+    requires(I < V::size)
+constexpr auto make_canonical_vector() -> V
 {
     using T = scalar_t<V>;
     const auto impl = []<std::size_t... Is>(std::index_sequence<Is...>)
@@ -19,7 +20,7 @@ requires(I < V::size) constexpr auto make_canonical_vector() -> V
 }  // namespace detail
 
 template <Vector V, std::size_t I>
-requires(I < V::size) inline constexpr auto canonical_vector =
-    detail::make_canonical_vector<V, I>();
+    requires(I < V::size)
+inline constexpr auto canonical_vector = detail::make_canonical_vector<V, I>();
 
 }  // namespace opt

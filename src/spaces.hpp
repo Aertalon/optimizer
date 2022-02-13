@@ -120,13 +120,15 @@ struct entity<derived<T, N>> {
     }
 
     template <typename coords_type::size_type Idx>
-    requires(Idx < N) [[nodiscard]] constexpr auto get() & -> auto&
+        requires(Idx < N) [
+                [nodiscard]] constexpr auto get() & -> auto&
     {
         return std::get<Idx>(data);
     }
 
     template <typename coords_type::size_type Idx>
-    requires(Idx < N) [[nodiscard]] constexpr auto get() const& -> auto&
+        requires(Idx < N) [
+                [nodiscard]] constexpr auto get() const& -> auto&
     {
         return std::get<Idx>(data);
     }

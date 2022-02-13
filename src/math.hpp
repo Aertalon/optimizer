@@ -21,10 +21,9 @@ namespace impl {
 /// @param high The (initial) upper bound for the value to be searched
 /// @param pred The (monotonic) predicate.
 template <std::size_t M, Arithmetic T, class F>
-requires(std::totally_ordered<T>&& std::regular_invocable<
-         const F&,
-         const T&>) constexpr auto binary_search(T low, T high, F const& pred)
-    -> T
+    requires(std::totally_ordered<T> &&
+             std::regular_invocable<const F&, const T&>)
+constexpr auto binary_search(T low, T high, F const& pred) -> T
 {
     std::size_t counter{0};
     while (counter < M) {
@@ -70,12 +69,14 @@ inline constexpr auto cos_ = make_base_fn_<N>([]<Real T>(T x) -> T {
 });
 
 template <std::size_t N>
-inline constexpr auto sqrt_ =
-    make_base_fn_<N>([]<Real T> requires(std::totally_ordered<T>)(T x)->T {
-        const auto lower_than_sqrt = [&x](T const& y) { return x < y * y; };
-        return binary_search<N>(
-            T{0}, x / (T{1} + T{1}) + T{1}, lower_than_sqrt);
-    });
+inline constexpr auto sqrt_ = make_base_fn_<N>(
+    []<Real T> requires(std::totally_ordered<T>)(T x)->T {
+                   const auto lower_than_sqrt = [&x](T const& y) {
+                       return x < y * y;
+                   };
+                   return binary_search<N>(
+                       T{0}, x / (T{1} + T{1}) + T{1}, lower_than_sqrt);
+               });
 
 template <std::default_initializable F,
           std::default_initializable G,

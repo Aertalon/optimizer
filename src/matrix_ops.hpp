@@ -23,8 +23,9 @@ template <Vector V>
 inline constexpr auto identity = detail::make_identity<V>();
 
 template <class V, std::size_t Cols>
-requires(matrix<V, Cols>::is_square)
-    [[nodiscard]] constexpr auto trace(matrix<V, Cols> const& m) -> scalar_t<V>
+    requires(matrix<V, Cols>::is_square) [
+            [nodiscard]] constexpr auto trace(matrix<V, Cols> const& m)
+        -> scalar_t<V>
 {
     return [&m]<std::size_t... Is>(std::index_sequence<Is...>)
     {
@@ -34,11 +35,11 @@ requires(matrix<V, Cols>::is_square)
 }
 
 template <Vector V, std::size_t Cols, Vector W, std::size_t ColsOther>
-requires(std::is_same<typename extend_to<V, 1>::type,
-                      typename extend_to<W, 1>::type>::value&&
-             std::is_same<scalar_t<V>, scalar_t<W>>::
-                 value) constexpr auto diagonal(matrix<V, Cols> const& m0,
-                                                matrix<W, ColsOther> const& m1)
+    requires(std::is_same<typename extend_to<V, 1>::type,
+                          typename extend_to<W, 1>::type>::value &&
+             std::is_same<scalar_t<V>, scalar_t<W>>::value)
+constexpr auto diagonal(matrix<V, Cols> const& m0,
+                        matrix<W, ColsOther> const& m1)
 {
     using U = typename extend_to<V, V::size + W::size>::type;
     matrix<U, Cols + ColsOther> diagm{};

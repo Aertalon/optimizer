@@ -15,8 +15,9 @@ struct copyable_wrapper : std::optional<T> {
     // NOLINTNEXTLINE(modernize-use-equals-default)
     using std::optional<T>::optional;
 
-    constexpr copyable_wrapper() requires std::default_initializable<T>
-        : std::optional<T>{std::in_place}
+    constexpr copyable_wrapper()
+        requires std::default_initializable<T>
+    : std::optional<T>{std::in_place}
     {}
 
     constexpr copyable_wrapper(const copyable_wrapper&) = default;
@@ -45,12 +46,13 @@ struct geometric : std::ranges::view_interface<geometric<F>> {
     geometric() = default;
 
     template <class T>
-    requires std::same_as<F, std::remove_cvref_t<T>>
+        requires std::same_as<F, std::remove_cvref_t<T>>
     // NOLINTNEXTLINE(bugprone-forwarding-reference-overload)
-    constexpr geometric(T&& t) : func{std::forward<T>(t)}, acc{1} {}
+    constexpr geometric(T&& t) : func{std::forward<T>(t)}, acc{1}
+    {}
 
     template <std::unsigned_integral I, std::same_as<R> A, class T>
-    requires std::same_as<F, std::remove_cvref_t<T>>
+        requires std::same_as<F, std::remove_cvref_t<T>>
     constexpr geometric(I n0, A init, T&& t)
         : func{std::forward<T>(t)}, step{n0}, acc{init}
     {}
