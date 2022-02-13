@@ -86,6 +86,7 @@ concept TupleSizable =
     { std::tuple_size<T>::value  } -> std::same_as<const std::size_t&>;
   };
 
+
 template <Indexable T>
 using scalar_t = std::remove_cvref_t<decltype(std::declval<T&>()[0])>;
 
