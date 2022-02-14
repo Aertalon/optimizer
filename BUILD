@@ -18,6 +18,7 @@ filegroup(
         "src/dualnumbers.hpp",
         "src/impl/base_fn.hpp",
         "src/impl/series.hpp",
+        "src/lineq_solvers.hpp",
         "src/math.hpp",
         "src/matrix.hpp",
         "src/matrix_factorizations.hpp",
