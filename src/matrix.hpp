@@ -1,6 +1,7 @@
 #pragma once
 
 #include "spaces.hpp"
+#include "spaces_ops.hpp"
 
 namespace opt {
 
@@ -199,5 +200,24 @@ struct matrix {
         return m2;
     }
 };
+
+namespace detail {
+
+template <Vector V>
+constexpr auto make_identity() -> matrix<V, V::size>
+{
+    const auto impl = []<std::size_t... Is>(std::index_sequence<Is...>)
+    {
+        return matrix<V, V::size>{canonical_vector<V, Is>...};
+    };
+
+    return impl(std::make_index_sequence<V::size>{});
+}
+
+}  // namespace detail
+
+// Replace with template<Matrix M> (M square) when the concept is available
+template <Vector V>
+inline constexpr auto identity = detail::make_identity<V>();
 
 }  // namespace opt
