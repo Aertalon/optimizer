@@ -77,8 +77,9 @@ struct close_to_fn {
 inline constexpr detail::close_to_fn close_to{};
 
 template <class T>
-requires Vector<T>
-[[nodiscard]] constexpr auto norm(const T& v) -> scalar_t<T>
+    requires Vector<T> [
+             [nodiscard]] constexpr auto
+    norm(const T& v) -> scalar_t<T>
 {
     return [&v]<std::size_t... Is>(std::index_sequence<Is...>)
     {
@@ -127,6 +128,18 @@ struct entity<derived<T, N>> {
     operator[](typename coords_type::size_type n) const& -> auto&
     {
         return data[n];
+    }
+
+    template <typename coords_type::size_type Idx>
+    [[nodiscard]] constexpr auto get() & -> auto&
+    {
+        return std::get<Idx>(data);
+    }
+
+    template <typename coords_type::size_type Idx>
+    [[nodiscard]] constexpr auto get() const& -> auto&
+    {
+        return std::get<Idx>(data);
     }
 
     friend auto operator<<(std::ostream& os, const entity& p) -> std::ostream&
