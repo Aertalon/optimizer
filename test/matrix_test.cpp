@@ -111,20 +111,6 @@ auto main() -> int
         // clang-format on
         expect(constant<eq(m0 * m1, expected)>);
     };
-
-    test("matrix identity") = [] {
-        using vec = vector<float, 3>;
-        // clang-format off
-        constexpr matrix<vec, 3> expected{
-            1.0F, 0.0F, 0.0F,
-            0.0F, 1.0F, 0.0F,
-            0.0F, 0.0F, 1.0F};
-        // clang-format on
-        constexpr vec v{2.0F, -4.0F, 42.F};
-
-        expect(constant<eq(expected, opt::identity<vec>)>);
-        expect(constant<eq(v, opt::identity<vec> * v)>);
-    };
 }
 
 // NOLINTEND(readability-magic-numbers)
