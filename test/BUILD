@@ -16,6 +16,11 @@ opt_cc_test(
 )
 
 opt_cc_test(
+    name = "matrix",
+    size = "small",
+)
+
+opt_cc_test(
     name = "convopt",
     size = "small",
 )

@@ -19,6 +19,7 @@ filegroup(
         "src/impl/base_fn.hpp",
         "src/impl/series.hpp",
         "src/math.hpp",
+        "src/matrix.hpp",
         "src/spaces.hpp",
         "src/stdx/traits.hpp",
     ],

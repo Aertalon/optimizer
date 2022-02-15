@@ -98,6 +98,8 @@ template <Arithmetic T,
           template <class, std::size_t>
           class derived>
 struct entity<derived<T, N>> {
+
+    using entries_types = T;
     using coords_type = std::array<T, N>;
 
     coords_type data{};
@@ -168,6 +170,11 @@ struct entity<derived<T, N>> {
         : data{std::forward<Args>(xs)...}
     {}
 
+    explicit constexpr entity(std::initializer_list<T> list)  // clang-format on
+    {
+        std::copy(list.begin(), list.end(), data.begin());
+    }
+
     // NOLINTEND(modernize-use-equals-delete)
 };
 
@@ -180,6 +187,10 @@ struct vector : entity<vector<T, N>> {
       requires(std::same_as<T, std::remove_cvref_t<Args>> && ...)
     explicit(sizeof...(Args) == 1) constexpr vector(Args&&... args)  // clang-format on
         : entity<vector<T, N>>(std::forward<Args>(args)...)
+    {}
+
+    explicit constexpr vector(std::initializer_list<T> list)  // clang-format on
+        : entity<vector<T, N>>(std::forward<std::initializer_list<T>>(list))
     {}
 
     [[nodiscard]] friend constexpr auto operator-(const vector& v) -> vector
