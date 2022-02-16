@@ -41,7 +41,7 @@ requires(std::is_same<scalar_t<V>, scalar_t<W>>::value)
 // clang-format off
 constexpr auto diagonal(matrix<V, Cols> const& m0, matrix<W, ColsOther> const& m1)
 {
-    using U = reshaped_to_t<V, V::size + W::size>;
+    using U = resize_to_t<V, V::size + W::size>;
     matrix<U, Cols + ColsOther> diagm{};
     std::transform(
         m0.cbegin(),
