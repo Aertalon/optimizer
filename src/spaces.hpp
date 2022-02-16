@@ -250,12 +250,15 @@ template <class... Ts>
 vector(Ts...) -> vector<std::common_type_t<Ts...>, sizeof...(Ts)>;
 
 template <class, std::size_t>
-struct extend_to {};
+struct reshaped_to {};
 
 template <Arithmetic T, std::size_t N, std::size_t NewN>
-struct extend_to<vector<T, N>, NewN> {
+struct reshaped_to<vector<T, N>, NewN> {
     using type = vector<T, NewN>;
 };
+
+template <Vector V, std::size_t NewN>
+using reshaped_to_t = typename reshaped_to<V, NewN>::type;
 
 /// A simple N-d point class
 template <Arithmetic T, std::size_t N>

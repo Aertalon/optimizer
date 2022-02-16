@@ -36,17 +36,16 @@ requires(matrix<V, Cols>::is_square)
 }
 
 template <Vector V, std::size_t Cols, Vector W, std::size_t ColsOther>
-requires(std::is_same<typename extend_to<V, 1>::type,
-                      typename extend_to<W, 1>::type>::value&&
-             std::is_same<scalar_t<V>, scalar_t<W>>::
-                 value) constexpr auto diagonal(matrix<V, Cols> const& m0,
-                                                matrix<W, ColsOther> const& m1)
+// clang-format off
+requires(std::is_same<scalar_t<V>, scalar_t<W>>::value)
+// clang-format off
+constexpr auto diagonal(matrix<V, Cols> const& m0, matrix<W, ColsOther> const& m1)
 {
-    using U = typename extend_to<V, V::size + W::size>::type;
+    using U = reshaped_to_t<V, V::size + W::size>;
     matrix<U, Cols + ColsOther> diagm{};
     std::transform(
-        m0.begin(),
-        m0.end(),
+        m0.cbegin(),
+        m0.cend(),
         diagm.begin(),
         diagm.begin(),
         [](V const& m0_col, U& diagm_col) {
@@ -55,8 +54,8 @@ requires(std::is_same<typename extend_to<V, 1>::type,
         });
 
     std::transform(
-        m1.begin(),
-        m1.end(),
+        m1.cbegin(),
+        m1.cend(),
         std::next(diagm.begin(), Cols),
         std::next(diagm.begin(), Cols),
         [](W const& m1_col, U& diagm_col) {
