@@ -35,6 +35,24 @@ auto main() -> int
         // clang-format on
         expect(constant<eq(trace(m), 6.0F)>);
     };
+
+    test("matrix diagonal") = [] {
+        constexpr matrix<vector<float, 1>, 1> m0{2.0F};
+        // clang-format off
+        constexpr matrix<vector<float, 3>, 2> m1{
+            1.0F, 2.0F,
+            -1.0F, -2.0F,
+            0.0F, 0.0F};
+        constexpr auto actual_diag{diagonal(m0, m1)};
+
+        constexpr matrix<vector<float, 4>, 3> expected_diag{
+            2.0F, 0.0F, 0.0F,
+            0.0F, 1.0F, 2.0F,
+            0.0F, -1.0F, -2.0F,
+            0.0F, 0.0F, 0.0F};
+        // clang-format on
+        expect(constant<eq(actual_diag, expected_diag)>);
+    };
 }
 
 // NOLINTEND(readability-magic-numbers)
